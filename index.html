@@ -234,4 +234,16 @@
 </script>
 </body>
   </html>
-              
+
+// --- CÓDIGO AÑADIDO PARA LA FUNCIONALIDAD DE CÁMARAS ---
+
+    /**
+     * Abre o cierra el monitor de cámaras.
+     * Vinculado al botón #btn-cam mediante onclick="toggleMonitor()".
+     */
+    function toggleMonitor() {
+        const monitor = document.getElementById('monitor');
+        game.mon = !game.mon;
+
+        if (game.mon) {
+            monitor.classList.add('open')
