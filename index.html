@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Withered's Attack: 9 Cams Edition</title>
+    <style>
+        :root { --red-alert: #ff0000; --lcd-green: #00ff41; }
+        * { box-sizing: border-box; touch-action: none; -webkit-user-select: none; outline: none; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; }
+        
+        .screen { position: absolute; width: 100vw; height: 100vh; display: none; overflow: hidden; }
+        #menu { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #050505; z-index: 1000; }
+        #newspaper { background: #fff; color: #000; padding: 20px; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .article { border: 2px solid #000; padding: 20px; width: 90%; color: #000; font-family:'Times New Roman'; }
+        
+        #office-view { position: relative; width: 100%; height: 100%; }
+        #office-canvas { position: absolute; width: 250%; height: 100%; left: -75%; background: #151515; transition: transform 0.1s ease-out; display: flex; align-items: center; justify-content: center; }
+
+        #tutorial-box { position: absolute; top: 0; left: 0; width: 100%; padding: 15px; background: rgba(100, 0, 0, 0.9); border-bottom: 3px solid var(--red-alert); text-align: center; font-size: 14px; z-index: 700; cursor: pointer; display: none; }
+
+        .door-container { position: absolute; top: 40%; width: 120px; height: 300px; border: 4px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px; }
+        #door-left { left: 22%; } #door-right { right: 22%; }
+        .door-status-box { width: 100%; height: 100px; border: 2px solid #555; background: #111; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .door-active { background: var(--red-alert) !important; color: #fff; font-weight: bold; }
+        .btn-door { width: 100%; height: 60px; background: #222; border: 2px solid #fff; color: white; font-size: 12px; }
+
+        #btn-mask, #btn-cam { position: absolute; bottom: 10px; width: 140px; height: 80px; background: rgba(40,40,40,0.9); border: 2px solid #fff; z-index: 500; }
+        #btn-mask { left: 10px; } #btn-cam { right: 10px; }
+
+        #monitor { position: absolute; top: 100%; left: 0; width: 100%; height: 100%; background: #000; z-index: 600; transition: top 0.3s cubic-bezier(0.1, 0.7, 1.0, 0.1); border-top: 10px solid #222; }
+        #monitor.open { top: 0; }
+        #cam-overlay { position: absolute; top: 20px; left: 20px; text-shadow: 2px 2px #000; }
+        #map { position: absolute; bottom: 10px; right: 10px; width: 250px; height: 200px; border: 2px solid #fff; background: rgba(0,0,0,0.7); }
+        .cam-node { position: absolute; width: 35px; height: 25px; background: #333; border: 1px solid #fff; font-size: 10px; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div id="menu" class="screen" style="display:flex;">
+        <h1 style="color:red; letter-spacing: 5px;">THE WITHERED'S ATTACK</h1>
+        <p id="save-status">RECORDS: NIGHT 1</p>
+        <button class="btn-door" style="width:250px; margin:10px;" onclick="newGame()">NEW GAME</button>
+        <button id="btn-continue" class="btn-door" style="width:250px; margin:10px; display:none;" onclick="loadGame()">CONTINUE</button>
+        <button id="btn-custom-trigger" class="btn-door" style="width:250px; margin:10px; display:none; border-color:yellow;" onclick="showCustomMenu()">CUSTOM NIGHT</button>
+    </div>
+
+    <div id="newspaper" class="screen">
+        <div class="article">
+            <h1 style="font-family:'Times New Roman'">THE FREDDY GAZETTE</h1>
+            <hr>
+            <h3>GRAND RE-OPENING!</h3>
+            <p>Fritz Smith found the newspaper with familiar faces. Decided to accept the job to see what was left of the old location.</p>
+            <p>Help Wanted: Night Shift security guard. Monitor cameras and animatronic characters. Not responsible for injury or dismemberment.</p>
+            <p style="font-size:12px;">$120.00 per week. Toca para aceptar el empleo.</p>
+        </div>
+    </div>
+
+    <div id="office-view" class="screen">
+        <div id="tutorial-box" onclick="this.style.display='none'"></div>
+        <div class="hud" style="left:10px; color:var(--lcd-green);">BAT: <span id="bat-p">100</span>% | <span id="usage-p">>></span></div>
+        <div class="hud" style="right:10px;">12 AM | <span id="night-p">N1</span></div>
+
+        <div id="office-canvas">
+            <div id="door-left" class="door-container">
+                <div id="status-L" class="door-status-box">ABIERTO</div>
+                <button id="ctrl-L" class="btn-door" onclick="toggleDoor('L')">CERRAR</button>
+            </div>
+            <div id="hallway" style="width:15%; height:45%; background:#000; border:2px solid #444; position:relative;">
+                <div id="anim-hall" style="position:absolute; width:100%; top:20%; text-align:center; color:red; font-size:10px;"></div>
+            </div>
+            <div id="door-right" class="door-container">
+                <div id="status-R" class="door-status-box">ABIERTO</div>
+                <button id="ctrl-R" class="btn-door" onclick="toggleDoor('R')">CERRAR</button>
+            </div>
+        </div>
+
+        <button id="btn-mask" onclick="toggleMask()">MÁSCARA</button>
+        <button id="btn-cam" onclick="toggleMonitor()">CÁMARAS</button>
+
+        <div id="monitor">
+            <div id="cam-overlay">
+                <h2 id="cam-id">CAM 01</h2>
+                <h3 id="cam-name">SHOW STAGE</h3>
+                <p style="background:#000;">DETECTADO: <span id="cam-scanner" style="color:red;">NINGUNO ESTÁ AQUÍ</span></p>
+            </div>
+            <div id="map">
+                <!-- CAM 01 al 09 -->
+                <button class="cam-node" style="top:10px; left:10px;" onclick="changeCam(1, 'SHOW STAGE')">01</button>
+                <button class="cam-node" style="top:10px; left:60px;" onclick="changeCam(7, 'DINING AREA')">07</button>
+                <button class="cam-node" style="top:10px; right:10px;" onclick="changeCam(8, 'PARTS/SERVICE')">08</button>
+                <button class="cam-node" style="top:50px; left:10px;" onclick="changeCam(2, 'PIRATE COVE')">02</button>
+                <button class="cam-node" style="top:50px; left:60px;" onclick="changeCam(5, 'KITCHEN')">05</button>
+                <button class="cam-node" style="top:90px; left:60px;" onclick="changeCam(4, 'CENTRAL HALL')">04</button>
+                <button class="cam-node" style="top:130px; left:10px;" onclick="changeCam(3, 'WEST HALL')">03</button>
+                <button class="cam-node" style="top:130px; left:60px;" onclick="changeCam(9, 'THE OFFICE')">09</button>
+                <button class="cam-node" style="top:130px; right:10px;" onclick="changeCam(6, 'EAST HALL')">06</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let night = 1;
+    let unlocked = false;
+    let game = { active: false, bat: 100, hr: 0, f: 0, mask: false, mon: false, dL: false, dR: false, curCam: 1 };
+    let ai = { fr: 0, bo: 0, ch: 0, fx: 0, gf: 0 };
+    let animPos = { bonnie: 'cam01', chica: 'cam01', freddy: 'cam01', foxy: 'cam02' }; 
+
+    function init() {
+        const s = localStorage.getItem('wa_master_save');
+        if(s) { night = parseInt(s); document.getElementById('save-status').innerText = "RECORDS: NIGHT " + night; document.getElementById('btn-continue').style.display = "block"; }
+        if(localStorage.getItem('wa_master_custom') === 'true') { unlocked = true; document.getElementById('btn-custom-trigger').style.display = "block"; }
+    }
+    init();
+
+    function newGame() { night = 1; document.getElementById('menu').style.display = 'none'; document.getElementById('newspaper').style.display = 'flex'; document.getElementById('newspaper').onclick = () => startNight(1); }
+    function loadGame() { startNight(night); }
+
+    function startNight(n, customAI = null) {
+        document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+        document.getElementById('office-view').style.display = 'block';
+        document.getElementById('night-p').innerText = "N" + n;
+        
+        if(!customAI) {
+            const presets = [{bo:2}, {bo:3, ch:4}, {bo:4, ch:5, fx:6}, {bo:8, ch:8, fx:9, fr:10}, {bo:15, ch:15, fx:15, fr:15, gf:15}];
+            let p = presets[n-1] || presets;
+            ai = { fr: p.fr||0, bo: p.bo||0, ch: p.ch||0, fx: p.fx||0, gf: p.gf||0 };
+        } else { ai = customAI; }
+
+        game.active = true; game.bat = 100; game.hr = 0; game.f = 0;
+        
+        const tutorial = document.getElementById('tutorial-box');
+        tutorial.style.display = 'block';
+        if(n === 1) tutorial.innerHTML = "NOCHE 1: Bonnie activo. Usa máscara en pasillo. Pulsa aquí para cerrar.";
+        if(n === 2) tutorial.innerHTML = "NOCHE 2: Chica se une. Revisa puertas y ventilación. Pulsa aquí para cerrar.";
+        if(n === 3) tutorial.innerHTML = "NOCHE 3: Foxy activo (CAM 02). Míralo para ralentizarlo. Pulsa aquí para cerrar.";
+        if(n === 4) tutorial.innerHTML = "NOCHE 4: Freddy activo. Silencioso, usa puerta derecha. Usa luz de puerta. Pulsa aquí para cerrar.";
+        if(n === 5) tutorial.innerHTML = "NOCHE 5: Todos al máximo. Golden Freddy puede aparecer. Usa la máscara. Pulsa aquí para cerrar.";
+
+        coreLoop();
+    }
+
+    function toggleDoor(side) {
+        if(side === 'L') {
+            game.dL = !game.dL;
+            document.getElementById('status-L').innerText = game.dL ? "CERRADO" : "ABIERTO";
+            document.getElementById('status-L').className = "door-status-box " + (game.dL ? "door-active" : "");
+            document.getElementById('ctrl-L').className = "btn-door " + (game.dL ? "btn-door-closed" : "");
+            document.getElementById('ctrl-L').innerText = game.dL ? "ABRIR" : "CERRAR";
+        } else {
+            game.dR = !game.dR;
+            document.getElementById('status-R').innerText = game.dR ? "CERRADO" : "ABIERTO";
+            document.getElementById('status-R').className = "door-status-box " + (game.dR ? "door-active" : "");
+            document.getElementById('ctrl-R').className = "btn-door " + (game.dR ? "btn-door-closed" : "");
+            document.getElementById('ctrl-R').innerText = game.dR ? "ABRIR" : "CERRAR";
+        }
+    }
+
+    function toggleMonitor() {
+        game.mon = !game.mon;
+        document.getElementById('monitor').classList.toggle('open');
+    }
+
+    function toggleMask() {
+        game.mask = !game.mask;
+        document.getElementById('btn-mask').style.background = game.mask ? "rgba(200,0,0,0.5)" : "rgba(40,40,40,0.9)";
+    }
+
+    function changeCam(id, name) {
+        game.curCam = id;
+        document.getElementById('cam-id').innerText = "CAM " + id.toString().padStart(2, '0');
+        document.getElementById('cam-name').innerText = name;
+        
+        let d = "NINGUNO ESTÁ AQUÍ";
+        if(id === 9) d = "FRITZ SMITH (ESTÁS AQUÍ)"; // The Office
+        else if(id === 1) d = "FREDDY, BONNIE, CHICA"; // Main Stage
+        else if(id === 2) d = "FOXY"; // Pirate Cove
+        else if(id === 8 && (animPos.freddy === 'cam08' || animPos.bonnie === 'cam08')) d = "MÚLTIPLES AMENAZAS";
+        else if (id === 8) d = "SIN AMENAZAS";
+        else if (id === 5) d = "(SOLO AUDIO ACTIVO)"; 
+        
+        document.getElementById('cam-scanner').innerText = d;
+    }
+
+    function coreLoop() {
+        if(!game.active) return;
+        game.f++;
+        let u = 1 + (game.mon?1:0) + (game.mask?1:0) + (game.dL?1:0) + (game.dR?1:0);
+        game.bat -= (u * 0.005);
+        document.getElementById('bat-p').innerText = Math.floor(game.bat);
+        document.getElementById('usage-p').innerText = ">".repeat(u);
+
+        if(game.f % 1200 === 0) {
+            game.hr++;
+            document.getElementById('val-h').innerText = game.hr === 0 ? 12 : game.hr;
+            if(game.hr === 6) victory();
+        }
+
+        if(game.bat <= 0) location.reload();
+        requestAnimationFrame(coreLoop);
+    }
+
+    function victory() {
+        game.active = false;
+        if(night < 5) night++; else unlocked = true;
+        localStorage.setItem('wa_master_save', night);
+        localStorage.setItem('wa_master_custom', unlocked);
+        alert("6 AM - SOBREVIVISTE");
+        location.reload();
+    }
+
+    function showCustomMenu() {
+        const m = document.getElementById('menu');
+        m.innerHTML = `<h1>CUSTOM CHALLENGES</h1>
+            <div class="challenge-card" onclick="startNight(6, {fr:14, gf:14})"><b>FREDDY FREDDY:</b> Freddy/Golden IA 14</div>
+            <div class="challenge-card" onclick="startNight(6, {bo:11, ch:11})"><b>BONNIE'S HALL:</b> Bonnie/Chica IA 11</div>
+            <div class="challenge-card" onclick="startNight(6, {fr:15, fx:15})"><b>DOOR'S ON:</b> Freddy/Foxy IA 15</div>
+            <div class="challenge-card" onclick="startNight(6, {fr:17, bo:17, ch:17, fx:17, gf:17})"><b>GOLDEN CHALLENGE:</b> All IA 17</div>
+            <div class="challenge-card" onclick="startNight(6, {fr:20, bo:20, ch:20, fx:20, gf:20})" style="border-color:yellow;"><b>5/20 MODE:</b> All IA 20</div>
+            <button class="btn-door" style="margin-top:20px;" onclick="location.reload()">VOLVER</button>`;
+    }
+</script>
+</body>
+  </html>
+              
