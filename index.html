@@ -3,158 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Withered's Attack - Cam System</title>
+    <title>THE WITHERED'S ATTACK: GLOBAL EDITION 2025</title>
     <style>
-        :root { --red-alert: #ff0000; --lcd-green: #00ff41; }
-        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; }
-
-        /* VISTA DE LA OFICINA */
-        #office-view { position: relative; width: 100vw; height: 100vh; background: #1a1a1a; display: flex; align-items: center; justify-content: center; }
-        
-        /* BOTONES PRINCIPALES */
-        #btn-mask, #btn-cam { 
-            position: absolute; bottom: 20px; width: 140px; height: 70px; 
-            z-index: 500; color: white; cursor: pointer; border: 2px solid #fff;
-            background: rgba(50, 50, 50, 0.9); font-weight: bold;
+        :root { 
+            --green: #00ff41; --red: #ff0000; --gold: #ffd700; 
+            --ui-font: 'Courier New', monospace;
         }
-        #btn-mask { left: 20px; }
-        #btn-cam { right: 20px; border-color: var(--lcd-green); }
+        * { box-sizing: border-box; touch-action: none; user-select: none; outline: none; }
+        body { margin: 0; background: #000; color: #fff; font-family: var(--ui-font); overflow: hidden; }
 
-        /* MONITOR DE CÁMARAS */
+        /* --- SISTEMA DE CAPAS (LAYERS) --- */
+        .screen { position: absolute; width: 100vw; height: 100vh; display: none; overflow: hidden; }
+        .active-flex { display: flex !important; flex-direction: column; align-items: center; justify-content: center; }
+
+        /* --- MENU PRINCIPAL --- */
+        #menu { background: #000; background-image: radial-gradient(#111 1px, transparent 1px); background-size: 20px 20px; }
+        .title-container { text-align: left; width: 80%; }
+        .game-title { font-size: 3.5rem; color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 10px; }
+        .night-indicator { color: var(--red); font-size: 1.2rem; margin-bottom: 50px; }
+        .menu-options { display: flex; flex-direction: column; gap: 15px; width: 80%; }
+        .opt { background: none; border: none; color: #888; text-align: left; font-size: 1.8rem; cursor: pointer; transition: 0.3s; }
+        .opt:hover { color: #fff; transform: translateX(20px); }
+        .locked { color: #222 !important; cursor: not-allowed; }
+
+        /* --- PERIÓDICO --- */
+        #newspaper { background: #fff; color: #000; font-family: 'Times New Roman', serif; padding: 50px; }
+        .paper-content { max-width: 700px; border: 2px solid #000; padding: 30px; line-height: 1.6; }
+
+        /* --- OFICINA Y JUEGO --- */
+        #office { background: #050505; }
+        #room { 
+            position: absolute; width: 200%; height: 100%; left: -50%;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(90deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+            transition: transform 0.1s ease-out;
+        }
+        
+        /* Puertas */
+        .door-control { position: absolute; width: 100px; height: 250px; border: 4px solid #222; display: flex; flex-direction: column; gap: 10px; padding: 10px; }
+        #door-left { left: 20%; } #door-right { right: 20%; }
+        .btn-light { height: 50%; background: #333; border: 2px solid #fff; color: white; font-size: 0.7rem; }
+        .btn-door { height: 50%; background: #440000; border: 2px solid #ff0000; color: white; }
+        .door-active { background: var(--red) !important; box-shadow: 0 0 20px var(--red); }
+
+        /* Monitor Trigger (Más arriba como pediste) */
+        #cam-trigger { 
+            position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
+            width: 400px; height: 45px; background: rgba(255,255,255,0.1);
+            border: 2px solid #fff; border-radius: 5px; z-index: 800;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            transition: 0.2s;
+        }
+        #cam-trigger:hover { background: rgba(255,255,255,0.3); bottom: 130px; }
+
+        /* Monitor View */
         #monitor { 
             position: absolute; top: 100%; left: 0; width: 100%; height: 100%; 
-            background: #050505; z-index: 600; transition: top 0.3s ease-out;
-            border-top: 5px solid #444;
+            background: #000; z-index: 1000; transition: top 0.3s cubic-bezier(0, 0.55, 0.45, 1);
+            border-top: 10px solid #333;
         }
-        #monitor.open { top: 0; } /* Animación de apertura */
-
-        /* INTERFAZ DE CÁMARAS */
-        #cam-overlay { position: absolute; top: 20px; left: 20px; z-index: 10; }
-        #cam-scanner { font-weight: bold; }
-
-        /* MAPA Y NODOS */
-        #map { 
-            position: absolute; bottom: 20px; right: 20px; width: 260px; height: 220px; 
-            border: 2px solid #fff; background: rgba(0,0,0,0.8); 
-        }
-        .cam-node { 
-            position: absolute; width: 40px; height: 30px; background: #222; 
-            border: 1px solid #fff; color: #fff; cursor: pointer; font-size: 12px;
-        }
-        /* Clase para la cámara que está seleccionada actualmente */
-        .cam-node.active { 
-            background: var(--lcd-green) !important; 
-            color: #000 !important; 
-            font-weight: bold;
-            box-shadow: 0 0 10px var(--lcd-green);
-        }
-
-        /* EFECTO DE ESTÁTICA */
-        .static {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('media.giphy.com');
-            opacity: 0.05; pointer-events: none;
-        }
+        #monitor.open { top: 0; }
+        
+        /* Custom Night UI */
+        .cn-panel { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-bottom: 40px; }
+        .cn-char { border: 2px solid #444; padding: 10px; text-align: center; }
+        .ai-btn { background: #222; border: 1px solid #fff; color: #fff; width: 30px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="office-view">
-        <h2 style="color: #333;">VISTA DE LA OFICINA</h2>
-        
-        <button id="btn-mask" onclick="toggleMask()">MÁSCARA</button>
-        <button id="btn-cam" onclick="toggleMonitor()">CÁMARAS</button>
+    <!-- MENU PRINCIPAL -->
+    <div id="menu" class="screen active-flex">
+        <div class="title-container">
+            <h1 class="game-title">THE WITHERED'S<br>ATTACK</h1>
+            <div id="save-info" class="night-indicator">NIGHT 1</div>
+        </div>
+        <div class="menu-options">
+            <button class="opt" onclick="flow.newGame()">New Game</button>
+            <button id="btn-continue" class="opt" onclick="flow.continue()">Continue</button>
+            <button id="btn-extras" class="opt locked">Extras 🔒</button>
+        </div>
+    </div>
 
-        <!-- SISTEMA DE CÁMARAS -->
-        <div id="monitor">
-            <div class="static"></div>
-            <div id="cam-overlay">
-                <h1 id="cam-id" style="color: var(--lcd-green); margin: 0;">CAM 01</h1>
-                <h3 id="cam-name">SHOW STAGE</h3>
-                <p>ESTADO: <span id="cam-scanner" style="color: var(--lcd-green);">LIMPIO</span></p>
+    <!-- ESCENA PERIÓDICO -->
+    <div id="newspaper" class="screen">
+        <div class="paper-content">
+            <h1>FREDDY FAZBEAR'S PIZZA</h1>
+            <h2>¡RE-APERTURA!</h2>
+            <hr>
+            <p>Se solicita guardia de seguridad nocturno para vigilar las instalaciones. Fazbear Entertainment ha decidido reutilizar a los modelos antiguos (Withered) para ahorrar costos, aunque su estado es "no tan reparado".</p>
+            <p>Fritz Smith acepta el cargo, sabiendo que los circuitos de reconocimiento facial están fallando.</p>
+            <button onclick="flow.startNight()" style="padding: 15px 30px; background: #000; color: #fff; cursor: pointer;">ACEPTAR</button>
+        </div>
+    </div>
+
+    <!-- OFICINA -->
+    <div id="office" class="screen">
+        <div id="room">
+            <div id="door-left" class="door-control">
+                <button id="l-light" class="btn-light">LUZ</button>
+                <button id="l-door" class="btn-door" onclick="game.toggleDoor('L')">CERRAR</button>
             </div>
+            <div style="width: 300px; height: 400px; background: #000; border: 2px solid #222;">PASILLO</div>
+            <div id="door-right" class="door-control">
+                <button id="r-light" class="btn-light">LUZ</button>
+                <button id="r-door" class="btn-door" onclick="game.toggleDoor('R')">CERRAR</button>
+            </div>
+        </div>
 
-            <div id="map">
-                <!-- Botones del Mapa con IDs para identificarlos -->
-                <button id="node-1" class="cam-node active" style="top:10px; left:10px;" onclick="changeCam(1, 'SHOW STAGE')">01</button>
-                <button id="node-7" class="cam-node" style="top:10px; left:60px;" onclick="changeCam(7, 'DINING AREA')">07</button>
-                <button id="node-8" class="cam-node" style="top:10px; right:10px;" onclick="changeCam(8, 'PARTS/SERVICE')">08</button>
-                <button id="node-2" class="cam-node" style="top:50px; left:10px;" onclick="changeCam(2, 'PIRATE COVE')">02</button>
-                <button id="node-5" class="cam-node" style="top:50px; left:60px;" onclick="changeCam(5, 'KITCHEN')">05</button>
-                <button id="node-4" class="cam-node" style="top:90px; left:60px;" onclick="changeCam(4, 'CENTRAL HALL')">04</button>
-                <button id="node-3" class="cam-node" style="top:130px; left:10px;" onclick="changeCam(3, 'WEST HALL')">03</button>
-                <button id="node-9" class="cam-node" style="top:130px; left:60px;" onclick="changeCam(9, 'THE OFFICE')">09</button>
-                <button id="node-6" class="cam-node" style="top:130px; right:10px;" onclick="changeCam(6, 'EAST HALL')">06</button>
+        <div id="hud-top" style="position: absolute; top: 20px; width: 100%; padding: 0 50px; display: flex; justify-content: space-between; font-size: 1.5rem;">
+            <div>BAT: <span id="bat-val">100</span>%</div>
+            <div><span id="clock-val">12</span> AM</div>
+        </div>
+
+        <div id="cam-trigger" onclick="game.toggleMonitor()">MONITOR</div>
+        <div id="mask-btn" onclick="game.toggleMask()" style="position: absolute; bottom: 20px; left: 20px; width: 150px; height: 80px; background: #222; border: 4px solid #555; cursor: pointer; display: flex; align-items: center; justify-content: center;">MASK</div>
+
+        <div id="monitor">
+            <div id="cam-view" style="padding: 40px;">
+                <h1 id="cam-name" style="color: var(--green);">CAM 01: SHOW STAGE</h1>
+                <h2 id="gf-trigger" style="color: var(--gold); display: none;">IT'S ME (GOLDEN FREDDY)</h2>
+            </div>
+            <!-- Mapa simplificado -->
+            <div id="map" style="position: absolute; bottom: 20px; right: 20px; width: 250px; height: 200px; border: 2px solid #fff;">
+                 <button onclick="game.setCam(1, 'SHOW STAGE')" style="position:absolute; top:10px; left:10px;">01</button>
+                 <button onclick="game.setCam(9, 'THE OFFICE')" style="position:absolute; bottom:10px; left:50%;">09</button>
             </div>
         </div>
     </div>
 
+    <!-- CUSTOM NIGHT -->
+    <div id="custom" class="screen">
+        <h1>CUSTOM NIGHT</h1>
+        <div class="cn-panel" id="cn-logic"></div>
+        <div id="challenges" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+             <!-- Los 9 desafíos se generan por JS -->
+        </div>
+        <button onclick="location.reload()" style="margin-top: 20px;">VOLVER</button>
+    </div>
+
 <script>
-    // Estado inicial
-    let game = { mon: false, mask: false, curCam: 1 };
+/** 
+ * MOTOR DE JUEGO: THE WITHERED'S ATTACK v2.0
+ * Lógica de IA, Persistencia de datos y Renderizado
+ */
+
+const flow = {
+    night: 1,
+    newGame() {
+        this.night = 1;
+        localStorage.setItem('wa_save', 1);
+        document.getElementById('menu').classList.remove('active-flex');
+        document.getElementById('newspaper').classList.add('active-flex');
+    },
+    continue() {
+        this.night = parseInt(localStorage.getItem('wa_save')) || 1;
+        this.startNight();
+    },
+    startNight() {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-flex'));
+        document.getElementById('office').style.display = 'block';
+        game.init();
+    }
+};
+
+const game = {
+    active: false,
+    bat: 100,
+    hr: 0,
+    mon: false,
+    mask: false,
+    dL: false,
+    dR: false,
+    ia: {},
     
-    // Posiciones de los animatrónicos (para probar el scanner)
-    let animPos = { 
-        bonnie: 'cam01', 
-        chica: 'cam08', 
-        freddy: 'cam01' 
-    };
+    init() {
+        this.active = true;
+        this.bat = 100;
+        this.hr = 0;
+        this.setDifficulty();
+        this.runLoops();
+    },
 
-    // FUNCIÓN: ABRIR/CERRAR MONITOR
-    function toggleMonitor() {
-        if (game.mask) return; // No se abren cámaras con máscara
-        game.mon = !game.mon;
-        const monDiv = document.getElementById('monitor');
+    setDifficulty() {
+        const n = flow.night;
+        // Lógica de IA exacta pedida
+        if(n==1) this.ia = { b:2, c:0, f:0, fr:0, gf:0 };
+        else if(n==2) this.ia = { b:3, c:5, f:0, fr:0, gf:0 };
+        else if(n==3) this.ia = { b:7, c:7, f:8, fr:0, gf:0 };
+        else if(n==4) this.ia = { b:8, c:8, f:9, fr:10, gf:0 };
+        else if(n==5) this.ia = { b:12, c:12, f:12, fr:12, gf:15 };
+    },
+
+    toggleDoor(side) {
+        if(side === 'L') { this.dL = !this.dL; document.getElementById('l-door').classList.toggle('door-active'); }
+        if(side === 'R') { this.dR = !this.dR; document.getElementById('r-door').classList.toggle('door-active'); }
+    },
+
+    toggleMonitor() {
+        if(this.mask) return;
+        this.mon = !this.mon;
+        document.getElementById('monitor').classList.toggle('open');
         
-        if (game.mon) {
-            monDiv.classList.add('open');
-            updateCamData(); 
-        } else {
-            monDiv.classList.remove('open');
+        // Lógica Golden Freddy
+        if(this.mon && this.ia.gf > 0 && Math.random() < (this.ia.gf/40)) {
+            document.getElementById('gf-trigger').style.display = 'block';
         }
-    }
+    },
 
-    // FUNCIÓN: CAMBIAR DE CÁMARA
-    function changeCam(id, name) {
-        game.curCam = id;
-        
-        // 1. Actualizar textos
-        document.getElementById('cam-id').innerText = `CAM 0${id}`;
-        document.getElementById('cam-name').innerText = name;
+    toggleMask() {
+        if(this.mon) return;
+        this.mask = !this.mask;
+        document.getElementById('office').style.boxShadow = this.mask ? "inset 0 0 100px #000" : "none";
+        if(this.mask) document.getElementById('gf-trigger').style.display = 'none';
+    },
 
-        // 2. Actualizar visual de los botones (Nodos)
-        document.querySelectorAll('.cam-node').forEach(node => node.classList.remove('active'));
-        document.getElementById(`node-${id}`).classList.add('active');
+    runLoops() {
+        const gameInterval = setInterval(() => {
+            if(!this.active) { clearInterval(gameInterval); return; }
 
-        // 3. Revisar si hay animatrónicos
-        updateCamData();
-    }
+            // Consumo batería
+            let drain = 0.08;
+            if(this.dL) drain += 0.2;
+            if(this.dR) drain += 0.2;
+            if(this.mon) drain += 0.15;
+            this.bat -= drain;
+            document.getElementById('bat-val').innerText = Math.floor(this.bat);
 
-    // FUNCIÓN: DETECTAR ENTIDADES
-    function updateCamData() {
-        let present = [];
-        for (let anim in animPos) {
-            if (animPos[anim] === `cam0${game.curCam}`) {
-                present.push(anim.toUpperCase());
+            if(this.bat <= 0) this.jumpscare("BLACKOUT");
+
+            // IA CHANCE (Simulada cada segundo)
+            let roll = Math.random() * 20;
+            if(roll < this.ia.fr && !this.dL) this.jumpscare("FREDDY");
+            if(roll < this.ia.f && !this.dR) this.jumpscare("FOXY");
+            if(roll < this.ia.b && !this.mask) this.jumpscare("BONNIE");
+            
+            // GF Punishment
+            if(document.getElementById('gf-trigger').style.display === 'block' && !this.mask) {
+                setTimeout(() => { if(!this.mask && this.active) this.jumpscare("GOLDEN FREDDY"); }, 3000);
             }
-        }
 
-        const scanner = document.getElementById('cam-scanner');
-        if (present.length > 0) {
-            scanner.innerText = "MOVIMIENTO: " + present.join(" & ");
-            scanner.style.color = "var(--red-alert)";
-        } else {
-            scanner.innerText = "SISTEMA LIMPIO";
-            scanner.style.color = "var(--lcd-green)";
+        }, 1000);
+
+        const clockInterval = setInterval(() => {
+            if(!this.active) { clearInterval(clockInterval); return; }
+            this.hr++;
+            if(this.hr >= 6) this.victory();
+            document.getElementById('clock-val').innerText = this.hr;
+        }, 45000);
+    },
+
+    jumpscare(who) {
+        this.active = false;
+        alert("GAME OVER - " + who);
+        setTimeout(() => { location.reload(); }, 5000);
+    },
+
+    victory() {
+        this.active = false;
+        alert("6 AM - SOBREVIVISTE");
+        if(flow.night < 6) flow.night++;
+        localStorage.setItem('wa_save', flow.night);
+        location.reload();
+    }
+};
+
+// Inicialización de la UI
+function setupMenu() {
+    const save = localStorage.getItem('wa_save');
+    if(save) {
+        document.getElementById('save-info').innerText = "NIGHT " + save;
+        if(parseInt(save) > 5) {
+            document.getElementById('btn-extras').classList.remove('locked');
+            document.getElementById('btn-extras').innerText = "EXTRAS";
+            document.getElementById('btn-extras').onclick = () => {
+                document.getElementById('menu').classList.remove('active-flex');
+                document.getElementById('custom').classList.add('active-flex');
+            };
         }
     }
+}
 
-    function toggleMask() {
-        if (game.mon) return;
-        game.mask = !game.mask;
-        document.getElementById('btn-mask').style.background = game.mask ? "red" : "rgba(50,50,50,0.9)";
-    }
+setupMenu();
 </script>
-
 </body>
 </html>
