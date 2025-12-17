@@ -2,49 +2,67 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Withered's Attack: 9 Cams Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>The Withered's Attack: Mobile Edition</title>
     <style>
-        :root { --green: #00ff41; --red: #ff0000; --gold: #ffd700; }
-        * { box-sizing: border-box; touch-action: none; user-select: none; }
-        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; }
+        :root { --green: #00ff41; --red: #ff0000; --gold: #ffd700; --ui-font: 'Courier New', monospace; }
+        * { box-sizing: border-box; touch-action: none; user-select: none; outline: none; }
+        body { margin: 0; background: #000; color: #fff; font-family: var(--ui-font); overflow: hidden; }
 
         .screen { position: absolute; width: 100vw; height: 100vh; display: none; }
         .active-flex { display: flex !important; flex-direction: column; align-items: center; justify-content: center; }
 
-        /* --- OFICINA --- */
-        #office { background: #1a1a1a; }
-        #cam-trigger { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 300px; height: 50px; background: rgba(0, 0, 0, 0.7); border: 2px solid var(--green); cursor: pointer; }
+        /* --- MENU Y PERIÓDICO (Omitidos para brevedad, misma lógica que antes) --- */
+        #menu, #newspaper { background: #000; }
 
-        /* --- MONITOR 4:3 Y POSICIÓN ALTA --- */
+        /* --- OFICINA (LAYOUT BASADO EN LA IMAGEN) --- */
+        #office { background: #050505; display: flex; flex-direction: column; }
+        
+        /* Barra Superior (BAT, HORA) */
+        #hud-top { 
+            width: 100%; padding: 10px 20px; display: flex; justify-content: space-between; 
+            font-size: 1rem; background: rgba(0,0,0,0.5); z-index: 10;
+        }
+
+        /* Área de la habitación/pasillo principal */
+        #room-container {
+            flex-grow: 1; /* Ocupa el espacio restante */
+            display: flex; justify-content: center; align-items: center;
+            position: relative; overflow: hidden;
+        }
+
+        /* El pasillo central negro como en la imagen */
+        #hallway { width: 300px; height: 400px; background: #000; border: 2px solid #222; position: relative; }
+        
+        /* Áreas de Puertas Laterales */
+        .door-area { position: absolute; width: 100px; height: 250px; background: #000; border: 2px solid #222; }
+        #left-door-area { left: 10px; }
+        #right-door-area { right: 10px; }
+
+        /* Botones Inferiores (Mascara/Camaras/Puertas) */
+        #office-controls-bottom {
+            height: 100px; width: 100%; display: flex; justify-content: space-between; padding: 10px;
+            background: #000;
+        }
+        .ctrl-btn { background: #222; border: 2px solid #fff; color: white; width: 150px; cursor: pointer; }
+        .door-btn-ctrl { width: 100px; height: 70px; }
+        .active-red { background: var(--red) !important; border-color: var(--red) !important; box-shadow: 0 0 10px var(--red); }
+
+
+        /* --- MONITOR (Dimensiones de Pantalla Completa Móvil) --- */
         #monitor { 
-            position: absolute; top: -100vh; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.95); z-index: 1000; transition: top 0.4s;
-            display: flex; justify-content: center;
+            position: absolute; top: 100vh; left: 0; width: 100vw; height: 100vh;
+            background: #000; z-index: 1000; transition: top 0.3s;
+            display: flex; flex-direction: column;
         }
         #monitor.open { top: 0; }
-
-        #cam-screen-43 {
-            width: 100%; max-width: 100vh; /* Mantener proporción cercana a 4:3 */
-            height: 75vh; margin-top: 10vh; /* Abre en la parte alta de la pantalla */
-            background: #050505; border: 5px solid #222;
-            position: relative;
-        }
-
-        /* --- UI CÁMARA --- */
-        #cam-info { position: absolute; top: 10px; left: 10px; color: var(--green); }
-        #status-scanner { background: #000; padding: 5px; }
         
-        /* Botón de Cerrar Cámaras */
-        #close-cams { 
-            position: absolute; top: 10px; right: 10px; 
-            width: 150px; height: 40px; background: var(--red); 
-            border: 2px solid #fff; color: white; cursor: pointer; 
-            font-weight: bold;
-        }
-
-        /* --- MAPA Y NODOS --- */
-        #map { position: absolute; bottom: 10px; left: 10px; width: 280px; height: 200px; border: 1px solid #444; background: rgba(0,0,0,0.7); }
+        /* UI de Cámaras */
+        #cam-info { padding: 10px; color: var(--green); display: flex; justify-content: space-between; }
+        #close-cams { background: var(--red); border: none; padding: 10px 20px; color: white; cursor: pointer; }
+        
+        /* Mapa y Nodos - Mismo layout que pediste */
+        #map { position: absolute; bottom: 10px; right: 10px; width: 280px; height: 200px; border: 1px solid #444; background: rgba(0,0,0,0.7); }
         .cam-node { position: absolute; width: 45px; height: 30px; background: #333; border: 1px solid #fff; font-size: 10px; cursor: pointer; }
         .cam-node.active { background: var(--green) !important; color: #000; box-shadow: 0 0 8px var(--green); }
 
@@ -52,108 +70,149 @@
 </head>
 <body>
 
-    <!-- Menús y Newspaper del código anterior aquí... -->
-    <div id="office" class="screen active-flex">
-        <!-- Controles de oficina (puertas, mascara) del código anterior aquí... -->
-        <button id="cam-trigger" onclick="game.toggleMonitor()">▲ CÁMARAS ▲</button>
+    <!-- MENÚ y Periódico (Lógica previa) -->
+    <div id="menu" class="screen active-flex"><h1>MENU</h1><button onclick="flow.newGame()">New Game</button></div>
+    <div id="newspaper" class="screen"><div class="paper-content"><h2>Historia</h2><p>Fritz Smith es contratado...</p><button onclick="flow.startNight()">ACEPTAR</button></div></div>
 
-        <!-- MONITOR DE CÁMARAS -->
-        <div id="monitor">
-            <div id="cam-screen-43">
-                <div id="cam-info">
-                    <h2 id="cam-id" style="margin:0;">CAM 1A</h2>
-                    <p id="cam-name" style="margin:0;">Scenario</p>
-                    <p id="status-scanner">SCANNING: NONE</p>
-                </div>
-                
-                <!-- Botón de Cerrar Cámaras -->
-                <button id="close-cams" onclick="game.toggleMonitor()">CERRAR CÁMARAS</button>
 
-                <!-- MAPA DE CÁMARAS -->
-                <div id="map">
-                    <!-- Ubicación exacta de las 9 cámaras según tu solicitud -->
-                    <!-- Scenario (1A) - Arriba al centro/izquierda -->
-                    <button id="node-1A" class="cam-node active" style="top:10px; left: 35%;" onclick="game.changeCam('1A', 'Scenario')">1A</button>
-                    <!-- Parts And Service (1B) - Arriba a la derecha -->
-                    <button id="node-1B" class="cam-node" style="top:10px; right:10px;" onclick="game.changeCam('1B', 'Parts And Service')">1B</button>
-                    
-                    <!-- East Hall (2A) - Centro izquierda -->
-                    <button id="node-2A" class="cam-node" style="top:60px; left:10px;" onclick="game.changeCam('2A', 'East Hall')">2A</button>
-                    <!-- Central Hall (2B) - Centro de todo (Pasillo) -->
-                    <button id="node-2B" class="cam-node" style="top:60px; left: 40%;" onclick="game.changeCam('2B', 'Central Hall')">2B</button>
-                    <!-- West Hall (3A) - Centro derecha -->
-                    <button id="node-3A" class="cam-node" style="top:60px; right:10px;" onclick="game.changeCam('3A', 'West Hall')">3A</button>
+    <!-- OFICINA (Nuevo diseño) -->
+    <div id="office" class="screen">
+        <div id="hud-top">
+            <div>BAT: <span id="bat-val">93</span>%</div>
+            <div><span id="clock-val">12</span> AM | N1</div>
+        </div>
+        
+        <div id="room-container">
+            <div id="left-door-area" class="door-area"></div>
+            <div id="hallway"></div>
+            <div id="right-door-area" class="door-area"></div>
+        </div>
 
-                    <!-- Down Scenario (5A) - Abajo derecha (Cerca de Office) -->
-                    <button id="node-5A" class="cam-node" style="top:110px; right:10px;" onclick="game.changeCam('5A', 'Down Scenario')">5A</button>
-                    <!-- Food Place (3B) - Abajo centro (Donde chica hace ruido) -->
-                    <button id="node-3B" class="cam-node" style="top:110px; left: 40%;" onclick="game.changeCam('3B', 'Food Place')">3B</button>
-                    
-                    <!-- Pirate Cove (4) - Abajo izquierda (Más arriba que East Hall) -->
-                    <button id="node-4" class="cam-node" style="top:110px; left:10px;" onclick="game.changeCam('4', 'Pirate Cove')">4</button>
-
-                    <!-- Office (5B) - Esquina inferior derecha (Tu posición) -->
-                    <button id="node-5B" class="cam-node" style="bottom:10px; right:10px;" onclick="game.changeCam('5B', 'Office/You')">5B</button>
-                </div>
-            </div>
+        <div id="office-controls-bottom">
+            <button class="ctrl-btn" onclick="game.toggleMask()">MÁSCARA</button>
+            <!-- Botones de puerta izquierda (para simular los botones blancos de la imagen) -->
+            <button class="door-btn-ctrl ctrl-btn" id="l-door" onclick="game.toggleDoor('L')">L</button>
+            <button class="door-btn-ctrl ctrl-btn" id="r-door" onclick="game.toggleDoor('R')">R</button>
+            <button class="ctrl-btn" onclick="game.toggleMonitor()">CÁMARAS</button>
         </div>
     </div>
-    <!-- Custom Night del código anterior aquí... -->
+
+    <!-- MONITOR -->
+    <div id="monitor">
+        <div id="cam-info">
+            <div>
+                <h2 id="cam-id" style="margin:0;">CAM 1A</h2>
+                <p id="cam-name" style="margin:0;">Scenario</p>
+                <p id="status-scanner">SCANNING: NONE</p>
+            </div>
+            <button id="close-cams" onclick="game.toggleMonitor()">CERRAR CÁMARAS</button>
+        </div>
+
+        <!-- Área de visualización de la cámara (el video iría aquí) -->
+        <div style="flex-grow: 1; background: #111;">
+             <!-- Contenido visual de la cámara -->
+             <div id="gf-trigger" style="color:var(--gold); display: none; text-align:center; padding-top:100px;">IT'S ME</div>
+        </div>
+
+
+        <!-- MAPA -->
+        <div id="map">
+            <!-- Ubicación exacta de las 9 cámaras según tu solicitud -->
+            <button id="node-1A" class="cam-node active" style="top:10px; left: 35%;" onclick="game.changeCam('1A', 'Scenario')">1A</button>
+            <button id="node-1B" class="cam-node" style="top:10px; right:10px;" onclick="game.changeCam('1B', 'Parts And Service')">1B</button>
+            <button id="node-2A" class="cam-node" style="top:60px; left:10px;" onclick="game.changeCam('2A', 'East Hall')">2A</button>
+            <button id="node-2B" class="cam-node" style="top:60px; left: 40%;" onclick="game.changeCam('2B', 'Central Hall')">2B</button>
+            <button id="node-3A" class="cam-node" style="top:60px; right:10px;" onclick="game.changeCam('3A', 'West Hall')">3A</button>
+            <button id="node-5A" class="cam-node" style="top:110px; right:10px;" onclick="game.changeCam('5A', 'Down Scenario')">5A</button>
+            <button id="node-3B" class="cam-node" style="top:110px; left: 40%;" onclick="game.changeCam('3B', 'Food Place')">3B</button>
+            <button id="node-4" class="cam-node" style="top:110px; left:10px;" onclick="game.changeCam('4', 'Pirate Cove')">4</button>
+            <button id="node-5B" class="cam-node" style="bottom:10px; right:10px;" onclick="game.changeCam('5B', 'Office/You')">5B</button>
+        </div>
+    </div>
+
 
 <script>
-    // Lógica del juego y flujo (flow, game.init, setDifficulty, etc) del código anterior va aquí...
-    // Sustituyo las funciones de cámara por las nuevas que usan IDs alfanuméricos
+// --- LÓGICA DE JUEGO (MECÁNICAS, IA, FLUJO) ---
+// Todo el JavaScript del mensaje anterior ("MOTOR DE JUEGO: THE WITHERED'S ATTACK v2.0")
+// debe ser copiado aquí. 
 
-    const game = {
-        active: false, bat: 100, hr: 0, mon: false, mask: false, dL: false, dR: false, ia: {},
-        curCam: '1A', // Usamos string para ID de cámara
-        animPos: { bonnie: '1A', chica: '3B', freddy: '1B', foxy: '4' }, // Posiciones de prueba
+const flow = {
+    night: 1,
+    newGame() {
+        this.night = 1;
+        localStorage.setItem('wa_save', 1);
+        document.getElementById('menu').classList.remove('active-flex');
+        document.getElementById('newspaper').classList.add('active-flex');
+    },
+    continue() { /* ... (igual que antes) ... */ },
+    startNight() {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-flex'));
+        document.getElementById('office').classList.add('active-flex'); // Usar active-flex para centrar
+        game.init();
+    }
+};
 
-        // ... init(), setDifficulty(), runLoops(), jumpscare(), victory() ...
+const game = {
+    active: false, bat: 100, hr: 0, mon: false, mask: false, dL: false, dR: false, ia: {},
+    curCam: '1A',
+    // Posiciones de prueba (se actualizan con IA real)
+    animPos: { bonnie: '1A', chica: '3B', freddy: '1B', foxy: '4' }, 
+    
+    init() { /* ... (igual que antes) ... */ },
+    setDifficulty() { /* ... (igual que antes) ... */ },
+    runLoops() { /* ... (igual que antes) ... */ },
+    jumpscare(who) { /* ... (igual que antes) ... */ },
+    victory() { /* ... (igual que antes) ... */ },
 
-        toggleMonitor() {
-            if(this.mask) return;
-            this.mon = !this.mon;
-            document.getElementById('monitor').classList.toggle('open');
-            if(this.mon) this.updateCamInfo();
-            // Lógica Golden Freddy (si aplica)
-        },
+    // Funciones de control de la oficina adaptadas al nuevo CSS
+    toggleDoor(side) {
+        if(side === 'L') { this.dL = !this.dL; document.getElementById('l-door').classList.toggle('active-red'); }
+        if(side === 'R') { this.dR = !this.dR; document.getElementById('r-door').classList.toggle('active-red'); }
+    },
+    toggleMask() {
+        if(this.mon) return;
+        this.mask = !this.mask;
+        // Simular efecto de máscara oscureciendo la vista
+        document.getElementById('room-container').style.filter = this.mask ? "brightness(0.2)" : "brightness(1)";
+        if(this.mask) document.getElementById('gf-trigger').style.display = 'none';
+    },
 
-        changeCam(id, name) {
-            this.curCam = id;
-            document.getElementById('cam-id').innerText = `CAM ${id}`;
-            document.getElementById('cam-name').innerText = name;
-            
-            // Actualizar botón activo
-            document.querySelectorAll('.cam-node').forEach(node => node.classList.remove('active'));
-            document.getElementById(`node-${id}`).classList.add('active');
-
-            this.updateCamInfo();
-        },
-
-        updateCamInfo() {
-            let detected = [];
-            for (let anim in this.animPos) {
-                if (this.animPos[anim] === this.curCam) {
-                    detected.push(anim.toUpperCase());
-                }
+    // Funciones de cámara adaptadas
+    toggleMonitor() {
+        if(this.mask) return;
+        this.mon = !this.mon;
+        document.getElementById('monitor').classList.toggle('open');
+        if(this.mon) this.updateCamInfo();
+    },
+    changeCam(id, name) {
+        this.curCam = id;
+        document.getElementById('cam-id').innerText = `CAM ${id}`;
+        document.getElementById('cam-name').innerText = name;
+        document.querySelectorAll('.cam-node').forEach(node => node.classList.remove('active'));
+        document.getElementById(`node-${id}`).classList.add('active');
+        this.updateCamInfo();
+    },
+    updateCamInfo() {
+        let detected = [];
+        for (let anim in this.animPos) {
+            // Solo detectamos si el animatrónico existe en la IA actual de la noche
+            if (this.animPos[anim] === this.curCam && game.ia[anim.charAt(0)] > 0) {
+                detected.push(anim.toUpperCase());
             }
+        }
+        const scanner = document.getElementById('status-scanner');
+        scanner.innerText = `SCANNING: ${detected.length > 0 ? detected.join(" & ") : "NONE"}`;
+        scanner.style.color = detected.length > 0 ? var(--red) : var(--green);
+    },
+};
 
-            const scanner = document.getElementById('status-scanner');
-            if (detected.length > 0) {
-                scanner.innerText = `SCANNING: ${detected.join(" & ")}`;
-                scanner.style.color = var(--red);
-            } else {
-                scanner.innerText = "SCANNING: NONE";
-                scanner.style.color = var(--green);
-            }
-        },
-        
-        // ... (resto de funciones como toggleDoor, toggleMask)
-    };
+// Asegúrate de que el juego empiece en el menú al cargar
+function setupMenu() {
+    // ... (la misma función setupMenu() que usaste antes para cargar guardado) ...
+    document.getElementById('menu').classList.add('active-flex');
+}
 
-    // Esto solo inicializa la interfaz visual del menú
-    // Debes pegar la lógica completa del juego del mensaje anterior aquí para que funcione
+setupMenu();
 </script>
 </body>
 </html>
