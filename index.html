@@ -2,217 +2,206 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>The Withered's Attack: Mobile Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Withered's Attack</title>
     <style>
-        :root { --green: #00ff41; --red: #ff0000; --gold: #ffd700; --ui-font: 'Courier New', monospace; }
-        * { box-sizing: border-box; touch-action: none; user-select: none; outline: none; }
-        body { margin: 0; background: #000; color: #fff; font-family: var(--ui-font); overflow: hidden; }
-
-        .screen { position: absolute; width: 100vw; height: 100vh; display: none; }
-        .active-flex { display: flex !important; flex-direction: column; align-items: center; justify-content: center; }
-
-        /* --- MENU Y PERIÓDICO (Omitidos para brevedad, misma lógica que antes) --- */
-        #menu, #newspaper { background: #000; }
-
-        /* --- OFICINA (LAYOUT BASADO EN LA IMAGEN) --- */
-        #office { background: #050505; display: flex; flex-direction: column; }
+        body { background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #game-container { width: 800px; height: 600px; background: #111; border: 4px solid #333; position: relative; overflow: hidden; }
+        .screen { width: 100%; height: 100%; position: absolute; display: none; }
+        .active { display: block; }
         
-        /* Barra Superior (BAT, HORA) */
-        #hud-top { 
-            width: 100%; padding: 10px 20px; display: flex; justify-content: space-between; 
-            font-size: 1rem; background: rgba(0,0,0,0.5); z-index: 10;
-        }
-
-        /* Área de la habitación/pasillo principal */
-        #room-container {
-            flex-grow: 1; /* Ocupa el espacio restante */
-            display: flex; justify-content: center; align-items: center;
-            position: relative; overflow: hidden;
-        }
-
-        /* El pasillo central negro como en la imagen */
-        #hallway { width: 300px; height: 400px; background: #000; border: 2px solid #222; position: relative; }
+        /* HUD UI */
+        .btn-door { position: absolute; width: 60px; height: 60px; background: red; top: 50%; transform: translateY(-50%); border: 2px solid #fff; cursor: pointer; z-index: 10; }
+        #door-left { left: 20px; }
+        #door-right { right: 20px; }
         
-        /* Áreas de Puertas Laterales */
-        .door-area { position: absolute; width: 100px; height: 250px; background: #000; border: 2px solid #222; }
-        #left-door-area { left: 10px; }
-        #right-door-area { right: 10px; }
-
-        /* Botones Inferiores (Mascara/Camaras/Puertas) */
-        #office-controls-bottom {
-            height: 100px; width: 100%; display: flex; justify-content: space-between; padding: 10px;
-            background: #000;
-        }
-        .ctrl-btn { background: #222; border: 2px solid #fff; color: white; width: 150px; cursor: pointer; }
-        .door-btn-ctrl { width: 100px; height: 70px; }
-        .active-red { background: var(--red) !important; border-color: var(--red) !important; box-shadow: 0 0 10px var(--red); }
-
-
-        /* --- MONITOR (Dimensiones de Pantalla Completa Móvil) --- */
-        #monitor { 
-            position: absolute; top: 100vh; left: 0; width: 100vw; height: 100vh;
-            background: #000; z-index: 1000; transition: top 0.3s;
-            display: flex; flex-direction: column;
-        }
-        #monitor.open { top: 0; }
+        #btn-mask { position: absolute; bottom: 20px; left: 20px; width: 150px; height: 50px; background: #444; border: 2px solid #888; z-index: 20; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        #btn-cams { position: absolute; bottom: 20px; right: 20px; width: 150px; height: 50px; background: #444; border: 2px solid #888; z-index: 20; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         
-        /* UI de Cámaras */
-        #cam-info { padding: 10px; color: var(--green); display: flex; justify-content: space-between; }
-        #close-cams { background: var(--red); border: none; padding: 10px 20px; color: white; cursor: pointer; }
-        
-        /* Mapa y Nodos - Mismo layout que pediste */
-        #map { position: absolute; bottom: 10px; right: 10px; width: 280px; height: 200px; border: 1px solid #444; background: rgba(0,0,0,0.7); }
-        .cam-node { position: absolute; width: 45px; height: 30px; background: #333; border: 1px solid #fff; font-size: 10px; cursor: pointer; }
-        .cam-node.active { background: var(--green) !important; color: #000; box-shadow: 0 0 8px var(--green); }
+        #mask-overlay { position: absolute; width: 100%; height: 100%; background: rgba(30, 0, 0, 0.7); display: none; z-index: 15; pointer-events: none; border: 40px solid #000; box-sizing: border-box; }
 
+        /* Monitor de Cámaras */
+        #camera-monitor { position: absolute; width: 100%; height: 100%; background: #000; z-index: 30; display: none; }
+        #cam-map { position: absolute; bottom: 20px; left: 20px; width: 300px; height: 150px; border: 2px solid #fff; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 5px; }
+        .cam-btn { background: #222; border: 1px solid #fff; color: #fff; font-size: 10px; cursor: pointer; }
+        .cam-active { background: #fff; color: #000; }
+
+        /* Cocina */
+        #kitchen-controls { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); text-align: center; }
+        .btn-action { padding: 10px; background: green; color: white; border: none; margin: 5px; cursor: pointer; }
+
+        /* Menu */
+        .menu-item { cursor: pointer; padding: 10px; font-size: 24px; text-transform: uppercase; }
+        .menu-item:hover { color: #ff0000; }
     </style>
 </head>
 <body>
 
-    <!-- MENÚ y Periódico (Lógica previa) -->
-    <div id="menu" class="screen active-flex"><h1>MENU</h1><button onclick="flow.newGame()">New Game</button></div>
-    <div id="newspaper" class="screen"><div class="paper-content"><h2>Historia</h2><p>Fritz Smith es contratado...</p><button onclick="flow.startNight()">ACEPTAR</button></div></div>
+<div id="game-container">
+    <!-- MENU PRINCIPAL -->
+    <div id="menu-screen" class="screen active">
+        <h1 style="text-align: center; margin-top: 100px;">THE WITHERED'S ATTACK</h1>
+        <div style="margin-left: 50px; margin-top: 150px;">
+            <div class="menu-item" onclick="startGame(1)">« New Game</div>
+            <div class="menu-item" onclick="loadGame()">« Continue</div>
+            <div class="menu-item" onclick="openCustomNight()">« Custom Night</div>
+        </div>
+    </div>
 
+    <!-- OFICINA -->
+    <div id="office-screen" class="screen">
+        <div id="mask-overlay"></div>
+        <div id="door-left" class="btn-door" onclick="toggleDoor('left')"></div>
+        <div id="door-right" class="btn-door" onclick="toggleDoor('right')"></div>
+        
+        <div id="office-view" style="text-align: center; margin-top: 200px;">
+            <h2 id="office-info">CENTRAL HALL</h2>
+            <div id="animatronic-in-hall" style="font-size: 40px; color: red;"></div>
+        </div>
 
-    <!-- OFICINA (Nuevo diseño) -->
-    <div id="office" class="screen">
-        <div id="hud-top">
-            <div>BAT: <span id="bat-val">93</span>%</div>
-            <div><span id="clock-val">12</span> AM | N1</div>
+        <div id="btn-mask" onclick="toggleMask()">MASK</div>
+        <div id="btn-cams" onclick="toggleCams()">CAMERAS</div>
+    </div>
+
+    <!-- MONITOR DE CÁMARAS -->
+    <div id="camera-monitor">
+        <div id="cam-view" style="width: 100%; height: 70%; display: flex; align-items: center; justify-content: center; background: #111;">
+            <h1 id="cam-name">SHOW STAGE</h1>
         </div>
         
-        <div id="room-container">
-            <div id="left-door-area" class="door-area"></div>
-            <div id="hallway"></div>
-            <div id="right-door-area" class="door-area"></div>
+        <div id="kitchen-controls" style="display:none;">
+            <button class="btn-action" onclick="cookPizza()">COOK PIZZA</button>
+            <button id="btn-sprinkles" class="btn-action" style="background: blue; display:none;" onclick="useSprinklers()">SPRINKLES</button>
         </div>
 
-        <div id="office-controls-bottom">
-            <button class="ctrl-btn" onclick="game.toggleMask()">MÁSCARA</button>
-            <!-- Botones de puerta izquierda (para simular los botones blancos de la imagen) -->
-            <button class="door-btn-ctrl ctrl-btn" id="l-door" onclick="game.toggleDoor('L')">L</button>
-            <button class="door-btn-ctrl ctrl-btn" id="r-door" onclick="game.toggleDoor('R')">R</button>
-            <button class="ctrl-btn" onclick="game.toggleMonitor()">CÁMARAS</button>
+        <div id="cam-map">
+            <button class="cam-btn" onclick="switchCam(1, 'Show Stage')">CAM 1</button>
+            <button class="cam-btn" onclick="switchCam(5, 'Parts & Service')">CAM 5</button>
+            <button class="cam-btn" onclick="switchCam(2, 'Pirate Cove')">CAM 2</button>
+            <button class="cam-btn" onclick="switchCam(8, 'East Hall')">CAM 8</button>
+            <button class="cam-btn" onclick="switchCam(4, 'Central Hall')">CAM 4</button>
+            <button class="cam-btn" onclick="switchCam(9, 'West Hall')">CAM 9</button>
+            <button class="cam-btn" onclick="switchCam(7, 'Bathrooms')">CAM 7</button>
+            <button class="cam-btn" onclick="switchCam(6, 'Down Stage')">CAM 6</button>
+            <button class="cam-btn" onclick="switchCam(3, 'Kitchen')">CAM 3</button>
         </div>
+        <div id="btn-close-cams" style="position: absolute; bottom: 20px; right: 20px; width: 150px; height: 50px; background: #444; border: 2px solid #888; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="toggleCams()">CLOSE</div>
     </div>
-
-    <!-- MONITOR -->
-    <div id="monitor">
-        <div id="cam-info">
-            <div>
-                <h2 id="cam-id" style="margin:0;">CAM 1A</h2>
-                <p id="cam-name" style="margin:0;">Scenario</p>
-                <p id="status-scanner">SCANNING: NONE</p>
-            </div>
-            <button id="close-cams" onclick="game.toggleMonitor()">CERRAR CÁMARAS</button>
-        </div>
-
-        <!-- Área de visualización de la cámara (el video iría aquí) -->
-        <div style="flex-grow: 1; background: #111;">
-             <!-- Contenido visual de la cámara -->
-             <div id="gf-trigger" style="color:var(--gold); display: none; text-align:center; padding-top:100px;">IT'S ME</div>
-        </div>
-
-
-        <!-- MAPA -->
-        <div id="map">
-            <!-- Ubicación exacta de las 9 cámaras según tu solicitud -->
-            <button id="node-1A" class="cam-node active" style="top:10px; left: 35%;" onclick="game.changeCam('1A', 'Scenario')">1A</button>
-            <button id="node-1B" class="cam-node" style="top:10px; right:10px;" onclick="game.changeCam('1B', 'Parts And Service')">1B</button>
-            <button id="node-2A" class="cam-node" style="top:60px; left:10px;" onclick="game.changeCam('2A', 'East Hall')">2A</button>
-            <button id="node-2B" class="cam-node" style="top:60px; left: 40%;" onclick="game.changeCam('2B', 'Central Hall')">2B</button>
-            <button id="node-3A" class="cam-node" style="top:60px; right:10px;" onclick="game.changeCam('3A', 'West Hall')">3A</button>
-            <button id="node-5A" class="cam-node" style="top:110px; right:10px;" onclick="game.changeCam('5A', 'Down Scenario')">5A</button>
-            <button id="node-3B" class="cam-node" style="top:110px; left: 40%;" onclick="game.changeCam('3B', 'Food Place')">3B</button>
-            <button id="node-4" class="cam-node" style="top:110px; left:10px;" onclick="game.changeCam('4', 'Pirate Cove')">4</button>
-            <button id="node-5B" class="cam-node" style="bottom:10px; right:10px;" onclick="game.changeCam('5B', 'Office/You')">5B</button>
-        </div>
-    </div>
-
+</div>
 
 <script>
-// --- LÓGICA DE JUEGO (MECÁNICAS, IA, FLUJO) ---
-// Todo el JavaScript del mensaje anterior ("MOTOR DE JUEGO: THE WITHERED'S ATTACK v2.0")
-// debe ser copiado aquí. 
-
-const flow = {
-    night: 1,
-    newGame() {
-        this.night = 1;
-        localStorage.setItem('wa_save', 1);
-        document.getElementById('menu').classList.remove('active-flex');
-        document.getElementById('newspaper').classList.add('active-flex');
-    },
-    continue() { /* ... (igual que antes) ... */ },
-    startNight() {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-flex'));
-        document.getElementById('office').classList.add('active-flex'); // Usar active-flex para centrar
-        game.init();
-    }
-};
-
-const game = {
-    active: false, bat: 100, hr: 0, mon: false, mask: false, dL: false, dR: false, ia: {},
-    curCam: '1A',
-    // Posiciones de prueba (se actualizan con IA real)
-    animPos: { bonnie: '1A', chica: '3B', freddy: '1B', foxy: '4' }, 
+    // VARIABLES DE ESTADO
+    let currentNight = 1;
+    let maskOn = false;
+    let camsOn = false;
+    let doorLeft = false;
+    let doorRight = false;
+    let currentCam = 1;
+    let pizzaTimer = 100;
+    let isFire = false;
+    let gfCamCount = 0;
     
-    init() { /* ... (igual que antes) ... */ },
-    setDifficulty() { /* ... (igual que antes) ... */ },
-    runLoops() { /* ... (igual que antes) ... */ },
-    jumpscare(who) { /* ... (igual que antes) ... */ },
-    victory() { /* ... (igual que antes) ... */ },
+    // IA CONFIG (Dificultad 0-20)
+    let IA = { bonnie: 0, chica: 0, foxy: 0, freddy: 0, golden: 0 };
 
-    // Funciones de control de la oficina adaptadas al nuevo CSS
-    toggleDoor(side) {
-        if(side === 'L') { this.dL = !this.dL; document.getElementById('l-door').classList.toggle('active-red'); }
-        if(side === 'R') { this.dR = !this.dR; document.getElementById('r-door').classList.toggle('active-red'); }
-    },
-    toggleMask() {
-        if(this.mon) return;
-        this.mask = !this.mask;
-        // Simular efecto de máscara oscureciendo la vista
-        document.getElementById('room-container').style.filter = this.mask ? "brightness(0.2)" : "brightness(1)";
-        if(this.mask) document.getElementById('gf-trigger').style.display = 'none';
-    },
+    function startGame(night) {
+        currentNight = night;
+        setupNight(night);
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('office-screen').classList.add('active');
+        gameLoop();
+    }
 
-    // Funciones de cámara adaptadas
-    toggleMonitor() {
-        if(this.mask) return;
-        this.mon = !this.mon;
-        document.getElementById('monitor').classList.toggle('open');
-        if(this.mon) this.updateCamInfo();
-    },
-    changeCam(id, name) {
-        this.curCam = id;
-        document.getElementById('cam-id').innerText = `CAM ${id}`;
-        document.getElementById('cam-name').innerText = name;
-        document.querySelectorAll('.cam-node').forEach(node => node.classList.remove('active'));
-        document.getElementById(`node-${id}`).classList.add('active');
-        this.updateCamInfo();
-    },
-    updateCamInfo() {
-        let detected = [];
-        for (let anim in this.animPos) {
-            // Solo detectamos si el animatrónico existe en la IA actual de la noche
-            if (this.animPos[anim] === this.curCam && game.ia[anim.charAt(0)] > 0) {
-                detected.push(anim.toUpperCase());
-            }
+    function setupNight(n) {
+        if(n === 1) IA = { bonnie: 3, chica: 0, foxy: 0, freddy: 0, golden: 0 };
+        if(n === 5) IA = { bonnie: 10, chica: 10, foxy: 12, freddy: 12, golden: 15 };
+        // Implementar resto de noches...
+    }
+
+    function toggleMask() {
+        if (camsOn) return;
+        maskOn = !maskOn;
+        document.getElementById('mask-overlay').style.display = maskOn ? 'block' : 'none';
+    }
+
+    function toggleCams() {
+        if (maskOn) return;
+        camsOn = !camsOn;
+        document.getElementById('camera-monitor').style.display = camsOn ? 'block' : 'none';
+        
+        if (camsOn) {
+            gfCamCount++;
+            checkGoldenFreddy();
         }
-        const scanner = document.getElementById('status-scanner');
-        scanner.innerText = `SCANNING: ${detected.length > 0 ? detected.join(" & ") : "NONE"}`;
-        scanner.style.color = detected.length > 0 ? var(--red) : var(--green);
-    },
-};
+    }
 
-// Asegúrate de que el juego empiece en el menú al cargar
-function setupMenu() {
-    // ... (la misma función setupMenu() que usaste antes para cargar guardado) ...
-    document.getElementById('menu').classList.add('active-flex');
-}
+    function switchCam(id, name) {
+        currentCam = id;
+        document.getElementById('cam-name').innerText = name;
+        document.getElementById('kitchen-controls').style.display = (id === 3) ? 'block' : 'none';
+    }
 
-setupMenu();
+    function cookPizza() {
+        pizzaTimer = 100;
+        console.log("Pizza cocinada");
+    }
+
+    function useSprinklers() {
+        if (isFire) {
+            isFire = false;
+            document.getElementById('btn-sprinkles').style.display = 'none';
+            alert("Incendio apagado");
+        }
+    }
+
+    function toggleDoor(side) {
+        if (side === 'left') {
+            doorLeft = !doorLeft;
+            document.getElementById('door-left').style.background = doorLeft ? 'blue' : 'red';
+        } else {
+            doorRight = !doorRight;
+            document.getElementById('door-right').style.background = doorRight ? 'blue' : 'red';
+        }
+    }
+
+    function checkGoldenFreddy() {
+        let limit = 50;
+        if (IA.golden >= 20) limit = 1;
+        else if (IA.golden >= 15) limit = 15;
+        else if (IA.golden >= 10) limit = 30;
+
+        if (gfCamCount >= limit && IA.golden > 0) {
+            alert("GOLDEN FREDDY APARECIÓ - ¡USA LA MÁSCARA!");
+            gfCamCount = 0;
+        }
+    }
+
+    // Loop de juego básico (Simulación)
+    function gameLoop() {
+        setInterval(() => {
+            // Lógica de Cocina
+            if (!camsOn || currentCam !== 3) {
+                pizzaTimer -= 0.5;
+            }
+            if (pizzaTimer <= 0 && !isFire) {
+                isFire = true;
+                document.getElementById('btn-sprinkles').style.display = 'block';
+                console.log("¡INCENDIO EN LA COCINA!");
+            }
+
+            // Aquí se añadiría la lógica de movimiento de Bonnie, Chica, etc.
+        }, 1000);
+    }
+
+    function openCustomNight() {
+        alert("Modo Custom Night: Freddy: " + IA.freddy + " Bonnie: " + IA.bonnie + "...");
+    }
+
+    function loadGame() {
+        const saved = localStorage.getItem('withered_attack_night');
+        if (saved) startGame(parseInt(saved));
+        else alert("No hay partida guardada");
+    }
 </script>
 </body>
 </html>
