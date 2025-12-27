@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Withered's Attack - Puertas Funcionales</title>
+    <title>The Withered's Attack - Final HUD</title>
     <style>
         body { background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
         #game-container { width: 800px; height: 600px; background: #000; border: 4px solid #333; position: relative; overflow: hidden; }
@@ -18,7 +18,7 @@
         .btn-door { width: 100%; height: 100%; background: #333; border: 2px solid #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
         .door-closed { background: #ff0000 !important; border-color: #ff5555 !important; }
 
-        /* BOTONES INFERIORES: MÁSCARA Y CÁMARAS */
+        /* BOTONES INFERIORES: MÁSCARA Y CÁMARAS (Visibles en oficina) */
         #btn-mask, #btn-cams { position: absolute; bottom: 10px; width: 140px; height: 60px; background: #222; border: 2px solid #fff; z-index: 20; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         #btn-mask { left: 10px; }
         #btn-cams { right: 10px; }
@@ -47,12 +47,27 @@
         .btn-sprinkles { background: #00ccff; display: none; }
         #fire-alert { color: red; font-weight: bold; display: none; animation: blink 0.5s infinite; }
 
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
-
         /* MAPA INFERIOR */
-        #cam-map { position: absolute; bottom: 10px; left: 10px; width: 320px; height: 180px; border: 2px solid #fff; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 5px; background: rgba(0,0,0,0.9); }
+        #cam-map { position: absolute; bottom: 50px; left: 10px; width: 320px; height: 180px; border: 2px solid #fff; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 5px; background: rgba(0,0,0,0.9); }
         .cam-btn { background: #333; border: 1px solid #fff; color: #fff; font-size: 11px; cursor: pointer; }
         .cam-active { background: #fff !important; color: #000 !important; font-weight: bold; }
+        
+        /* BOTON DE CERRAR CAMARAS (Nueva Posicion) */
+        #btn-close-cams {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 334px; /* Ancho del mapa + padding/border */
+            height: 35px;
+            background: #444;
+            border: 2px solid #fff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -71,7 +86,6 @@
     <div id="office-screen" class="screen">
         <div id="mask-overlay"></div>
         
-        <!-- Contenedores de botones de puerta -->
         <div id="door-left-container" class="btn-door-container" onclick="toggleDoor('left')">
             <div id="btn-door-left" class="btn-door">CLOSE LEFT</div>
         </div>
@@ -115,35 +129,30 @@
             <button class="cam-btn" id="m-cam6" onclick="switchCam(6, 'DOWN STAGE')">CAM 6</button>
             <button class="cam-btn" id="m-cam3" onclick="switchCam(3, 'KITCHEN')">CAM 3</button>
         </div>
+        
+        <!-- BOTÓN CERRAR CÁMARAS (NUEVA UBICACIÓN) -->
+        <div id="btn-close-cams" onclick="toggleCams()">CLOSE CAMERAS</div>
     </div>
 </div>
 
 <script>
-    // ESTADO GLOBAL
     let gameActive = false;
     let camsOpen = false;
     let maskOn = false;
     let currentCam = 1;
     let doorLeftClosed = false;
     let doorRightClosed = false;
-    
-    // SISTEMA DE COCINA
     let pizzaHeat = 0; 
     let isKitchenOnFire = false;
 
-    // POSICIONES DE ANIMATRÓNICOS (Dummies para prueba)
     let animatronics = {
-        freddy: 1, 
-        bonnie: 1, 
-        chica: 3,  
-        foxy: 2    
+        freddy: 1, bonnie: 1, chica: 3, foxy: 2
     };
 
     function startGame(night) {
         document.getElementById('menu-screen').classList.remove('active');
         document.getElementById('office-screen').classList.add('active');
         gameActive = true;
-        
         setInterval(kitchenLogic, 1500); 
         setInterval(moveAnimatronics, 4000); 
     }
@@ -151,12 +160,9 @@
     function switchCam(id, name) {
         currentCam = id;
         document.getElementById('cam-display-name').innerText = name;
-        
         document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('cam-active'));
         document.getElementById('m-cam' + id).classList.add('cam-active');
-
         document.getElementById('kitchen-interface').style.display = (id === 3) ? 'block' : 'none';
-
         updateAnimatronicTextOverlay();
     }
 
@@ -166,32 +172,23 @@
         if (animatronics.bonnie === currentCam) found.push("W. BONNIE DETECTED");
         if (animatronics.chica === currentCam) found.push("W. CHICA DETECTED");
         if (animatronics.foxy === currentCam) found.push("W. FOXY DETECTED");
-
         const detectionTextElement = document.getElementById('animatronic-detection-text');
-        if (found.length > 0) {
-            detectionTextElement.innerText = found.join(" | ");
-        } else {
-            detectionTextElement.innerText = "";
-        }
+        detectionTextElement.innerText = found.length > 0 ? found.join(" | ") : "";
     }
     
     function moveAnimatronics() {
-        // Movimiento aleatorio simple para prueba
+        // Lógica de movimiento dummy
         animatronics.bonnie = Math.floor(Math.random() * 9) + 1;
         animatronics.freddy = Math.floor(Math.random() * 9) + 1;
         animatronics.chica = Math.floor(Math.random() * 9) + 1;
         animatronics.foxy = Math.floor(Math.random() * 9) + 1;
-
-        if (camsOpen) {
-            updateAnimatronicTextOverlay();
-        }
+        if (camsOpen) updateAnimatronicTextOverlay();
     }
 
     function kitchenLogic() {
         if (!gameActive) return;
         pizzaHeat += 3;
         if (pizzaHeat > 100) pizzaHeat = 100;
-
         if (pizzaHeat >= 100 && !isKitchenOnFire) {
             isKitchenOnFire = true;
             document.getElementById('fire-alert').style.display = 'block';
@@ -220,9 +217,17 @@
         camsOpen = !camsOpen;
         document.getElementById('camera-monitor').style.display = camsOpen ? 'block' : 'none';
         
-        // Desactivar botones de puerta si las cámaras están abiertas
-        document.getElementById('door-left-container').style.pointerEvents = camsOpen ? 'none' : 'auto';
-        document.getElementById('door-right-container').style.pointerEvents = camsOpen ? 'none' : 'auto';
+        // Controlar visibilidad de botones de oficina (Puertas, Máscara, Cámaras)
+        const officeButtons = [
+            document.getElementById('door-left-container'),
+            document.getElementById('door-right-container'),
+            document.getElementById('btn-mask'),
+            document.getElementById('btn-cams')
+        ];
+        
+        officeButtons.forEach(btn => {
+            btn.style.display = camsOpen ? 'none' : 'flex'; // Usamos flex para centrar
+        });
 
         if (camsOpen) updateAnimatronicTextOverlay();
     }
@@ -234,11 +239,9 @@
     }
 
     function toggleDoor(side) {
-        if (camsOpen) return; // No se pueden usar puertas con cámaras abiertas
-        
+        if (camsOpen) return;
         const btn = document.getElementById('btn-door-' + side);
         const isClosed = btn.classList.toggle('door-closed');
-        
         if (side === 'left') {
             doorLeftClosed = isClosed;
             btn.innerText = isClosed ? "CLOSED" : "CLOSE LEFT";
