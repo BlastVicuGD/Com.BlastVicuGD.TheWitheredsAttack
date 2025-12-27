@@ -3,204 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Withered's Attack</title>
+    <title>The Withered's Attack - Kitchen Update</title>
     <style>
         body { background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
         #game-container { width: 800px; height: 600px; background: #111; border: 4px solid #333; position: relative; overflow: hidden; }
         .screen { width: 100%; height: 100%; position: absolute; display: none; }
         .active { display: block; }
         
-        /* HUD UI */
-        .btn-door { position: absolute; width: 60px; height: 60px; background: red; top: 50%; transform: translateY(-50%); border: 2px solid #fff; cursor: pointer; z-index: 10; }
-        #door-left { left: 20px; }
-        #door-right { right: 20px; }
+        /* BOTONES DE PUERTAS */
+        .btn-door { position: absolute; width: 50px; height: 100px; background: #440000; top: 40%; border: 3px solid #ff0000; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        #door-left { left: 10px; }
+        #door-right { right: 10px; }
         
-        #btn-mask { position: absolute; bottom: 20px; left: 20px; width: 150px; height: 50px; background: #444; border: 2px solid #888; z-index: 20; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        #btn-cams { position: absolute; bottom: 20px; right: 20px; width: 150px; height: 50px; background: #444; border: 2px solid #888; z-index: 20; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        /* BOTONES DE MÁSCARA Y CÁMARAS */
+        #btn-mask { position: absolute; bottom: 10px; left: 10px; width: 140px; height: 60px; background: #222; border: 3px solid #555; z-index: 20; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        #btn-cams { position: absolute; bottom: 10px; right: 10px; width: 140px; height: 60px; background: #222; border: 3px solid #555; z-index: 20; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         
-        #mask-overlay { position: absolute; width: 100%; height: 100%; background: rgba(30, 0, 0, 0.7); display: none; z-index: 15; pointer-events: none; border: 40px solid #000; box-sizing: border-box; }
+        #mask-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: none; z-index: 15; pointer-events: none; border: 60px solid #1a1a1a; box-sizing: border-box; }
 
-        /* Monitor de Cámaras */
-        #camera-monitor { position: absolute; width: 100%; height: 100%; background: #000; z-index: 30; display: none; }
-        #cam-map { position: absolute; bottom: 20px; left: 20px; width: 300px; height: 150px; border: 2px solid #fff; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 5px; }
-        .cam-btn { background: #222; border: 1px solid #fff; color: #fff; font-size: 10px; cursor: pointer; }
-        .cam-active { background: #fff; color: #000; }
+        /* MONITOR DE CÁMARAS */
+        #camera-monitor { position: absolute; width: 100%; height: 100%; background: #000; z-index: 30; display: none; border: 10px solid #333; box-sizing: border-box;}
+        
+        /* HUD DE DETECCIÓN */
+        #radar-hud { position: absolute; top: 20px; left: 20px; padding: 15px; border: 2px solid #00ff00; background: rgba(0, 40, 0, 0.7); color: #00ff00; font-size: 18px; z-index: 35; }
+        .detection-text { color: #00ff00; font-weight: bold; text-shadow: 0 0 5px #00ff00; }
+        .no-detection { color: #ff0000; font-style: italic; }
 
-        /* Cocina */
-        #kitchen-controls { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); text-align: center; }
-        .btn-action { padding: 10px; background: green; color: white; border: none; margin: 5px; cursor: pointer; }
+        /* MECÁNICA DE COCINA */
+        #kitchen-interface { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); width: 300px; text-align: center; background: rgba(0,0,0,0.8); padding: 20px; border: 2px solid white; display: none; z-index: 40; }
+        .btn-cook { background: #ff9900; color: white; border: none; padding: 15px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 10px; }
+        .btn-sprinkles { background: #00ccff; color: white; border: none; padding: 15px; cursor: pointer; font-weight: bold; width: 100%; display: none; }
+        #fire-alert { color: red; font-weight: bold; display: none; animation: blink 0.5s infinite; }
 
-        /* Menu */
-        .menu-item { cursor: pointer; padding: 10px; font-size: 24px; text-transform: uppercase; }
-        .menu-item:hover { color: #ff0000; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+
+        /* MAPA */
+        #cam-map { position: absolute; bottom: 20px; left: 20px; width: 320px; height: 180px; border: 2px solid #fff; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 5px; background: rgba(0,0,0,0.9); }
+        .cam-btn { background: #333; border: 1px solid #fff; color: #fff; font-size: 11px; cursor: pointer; }
+        .cam-active { background: #fff !important; color: #000 !important; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <!-- MENU PRINCIPAL -->
+    <!-- MENÚ -->
     <div id="menu-screen" class="screen active">
         <h1 style="text-align: center; margin-top: 100px;">THE WITHERED'S ATTACK</h1>
-        <div style="margin-left: 50px; margin-top: 150px;">
-            <div class="menu-item" onclick="startGame(1)">« New Game</div>
-            <div class="menu-item" onclick="loadGame()">« Continue</div>
-            <div class="menu-item" onclick="openCustomNight()">« Custom Night</div>
+        <div style="margin-left: 100px; margin-top: 50px;">
+            <div onclick="startGame(1)" style="cursor:pointer; font-size: 24px; margin: 15px;">« NEW GAME</div>
+            <div onclick="loadGame()" style="cursor:pointer; font-size: 24px; margin: 15px;">« CONTINUE</div>
         </div>
     </div>
 
     <!-- OFICINA -->
     <div id="office-screen" class="screen">
         <div id="mask-overlay"></div>
-        <div id="door-left" class="btn-door" onclick="toggleDoor('left')"></div>
-        <div id="door-right" class="btn-door" onclick="toggleDoor('right')"></div>
+        <div id="door-left" class="btn-door" onclick="toggleDoor('left')">DOOR</div>
+        <div id="door-right" class="btn-door" onclick="toggleDoor('right')">DOOR</div>
         
-        <div id="office-view" style="text-align: center; margin-top: 200px;">
-            <h2 id="office-info">CENTRAL HALL</h2>
-            <div id="animatronic-in-hall" style="font-size: 40px; color: red;"></div>
+        <div style="text-align:center; padding-top: 250px;">
+            <h2 id="office-location">CENTRAL HALL</h2>
         </div>
 
         <div id="btn-mask" onclick="toggleMask()">MASK</div>
         <div id="btn-cams" onclick="toggleCams()">CAMERAS</div>
     </div>
 
-    <!-- MONITOR DE CÁMARAS -->
+    <!-- MONITOR -->
     <div id="camera-monitor">
-        <div id="cam-view" style="width: 100%; height: 70%; display: flex; align-items: center; justify-content: center; background: #111;">
-            <h1 id="cam-name">SHOW STAGE</h1>
+        <div id="radar-hud">
+            DETECTION: <span id="radar-status" class="no-detection">NOTHING</span>
         </div>
-        
-        <div id="kitchen-controls" style="display:none;">
-            <button class="btn-action" onclick="cookPizza()">COOK PIZZA</button>
-            <button id="btn-sprinkles" class="btn-action" style="background: blue; display:none;" onclick="useSprinklers()">SPRINKLES</button>
+
+        <!-- INTERFAZ COCINA -->
+        <div id="kitchen-interface">
+            <h3 style="margin-top:0;">KITCHEN SYSTEM</h3>
+            <p>PIZZA HEAT: <span id="heat-val">0</span>%</p>
+            <div id="fire-alert">!!! FIRE DETECTED !!!</div>
+            <button class="btn-cook" onclick="cookPizza()">COOK PIZZA</button>
+            <button id="btn-sprinkles-action" class="btn-sprinkles" onclick="useSprinklers()">USE SPRINKLES</button>
+        </div>
+
+        <div id="cam-view" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background: #0a0a0a;">
+            <h1 id="cam-display-name" style="opacity:0.1; font-size: 60px;">CAM 1</h1>
         </div>
 
         <div id="cam-map">
-            <button class="cam-btn" onclick="switchCam(1, 'Show Stage')">CAM 1</button>
-            <button class="cam-btn" onclick="switchCam(5, 'Parts & Service')">CAM 5</button>
-            <button class="cam-btn" onclick="switchCam(2, 'Pirate Cove')">CAM 2</button>
-            <button class="cam-btn" onclick="switchCam(8, 'East Hall')">CAM 8</button>
-            <button class="cam-btn" onclick="switchCam(4, 'Central Hall')">CAM 4</button>
-            <button class="cam-btn" onclick="switchCam(9, 'West Hall')">CAM 9</button>
-            <button class="cam-btn" onclick="switchCam(7, 'Bathrooms')">CAM 7</button>
-            <button class="cam-btn" onclick="switchCam(6, 'Down Stage')">CAM 6</button>
-            <button class="cam-btn" onclick="switchCam(3, 'Kitchen')">CAM 3</button>
+            <button class="cam-btn" id="m-cam1" onclick="switchCam(1, 'SHOW STAGE')">CAM 1</button>
+            <button class="cam-btn" id="m-cam5" onclick="switchCam(5, 'PARTS & SERVICE')">CAM 5</button>
+            <button class="cam-btn" id="m-cam2" onclick="switchCam(2, 'PIRATE COVE')">CAM 2</button>
+            <button class="cam-btn" id="m-cam8" onclick="switchCam(8, 'EAST HALL')">CAM 8</button>
+            <button class="cam-btn" id="m-cam4" onclick="switchCam(4, 'CENTRAL HALL')">CAM 4</button>
+            <button class="cam-btn" id="m-cam9" onclick="switchCam(9, 'WEST HALL')">CAM 9</button>
+            <button class="cam-btn" id="m-cam7" onclick="switchCam(7, 'BATHROOMS')">CAM 7</button>
+            <button class="cam-btn" id="m-cam6" onclick="switchCam(6, 'DOWN STAGE')">CAM 6</button>
+            <button class="cam-btn" id="m-cam3" onclick="switchCam(3, 'KITCHEN')">CAM 3</button>
         </div>
-        <div id="btn-close-cams" style="position: absolute; bottom: 20px; right: 20px; width: 150px; height: 50px; background: #444; border: 2px solid #888; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="toggleCams()">CLOSE</div>
     </div>
 </div>
 
 <script>
-    // VARIABLES DE ESTADO
-    let currentNight = 1;
+    // ESTADO GLOBAL
+    let gameActive = false;
+    let camsOpen = false;
     let maskOn = false;
-    let camsOn = false;
-    let doorLeft = false;
-    let doorRight = false;
     let currentCam = 1;
-    let pizzaTimer = 100;
-    let isFire = false;
-    let gfCamCount = 0;
     
-    // IA CONFIG (Dificultad 0-20)
-    let IA = { bonnie: 0, chica: 0, foxy: 0, freddy: 0, golden: 0 };
+    // SISTEMA DE COCINA
+    let pizzaHeat = 0; 
+    let isKitchenOnFire = false;
+
+    // POSICIONES DE ANIMATRÓNICOS (Dummies para prueba)
+    let animatronics = {
+        freddy: 1,
+        bonnie: 1,
+        chica: 3, // Chica empieza en la cocina
+        foxy: 2
+    };
 
     function startGame(night) {
-        currentNight = night;
-        setupNight(night);
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('menu-screen').classList.remove('active');
         document.getElementById('office-screen').classList.add('active');
-        gameLoop();
-    }
-
-    function setupNight(n) {
-        if(n === 1) IA = { bonnie: 3, chica: 0, foxy: 0, freddy: 0, golden: 0 };
-        if(n === 5) IA = { bonnie: 10, chica: 10, foxy: 12, freddy: 12, golden: 15 };
-        // Implementar resto de noches...
-    }
-
-    function toggleMask() {
-        if (camsOn) return;
-        maskOn = !maskOn;
-        document.getElementById('mask-overlay').style.display = maskOn ? 'block' : 'none';
-    }
-
-    function toggleCams() {
-        if (maskOn) return;
-        camsOn = !camsOn;
-        document.getElementById('camera-monitor').style.display = camsOn ? 'block' : 'none';
+        gameActive = true;
         
-        if (camsOn) {
-            gfCamCount++;
-            checkGoldenFreddy();
-        }
+        // Loop de lógica de cocina
+        setInterval(kitchenLogic, 1000);
     }
 
     function switchCam(id, name) {
         currentCam = id;
-        document.getElementById('cam-name').innerText = name;
-        document.getElementById('kitchen-controls').style.display = (id === 3) ? 'block' : 'none';
+        document.getElementById('cam-display-name').innerText = name;
+        
+        // Actualizar botones del mapa
+        document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('cam-active'));
+        document.getElementById('m-cam' + id).classList.add('cam-active');
+
+        // Mostrar interfaz de cocina solo en CAM 3
+        document.getElementById('kitchen-interface').style.display = (id === 3) ? 'block' : 'none';
+
+        updateRadar();
+    }
+
+    function updateRadar() {
+        let found = [];
+        if (animatronics.freddy === currentCam) found.push("W. FREDDY");
+        if (animatronics.bonnie === currentCam) found.push("W. BONNIE");
+        if (animatronics.chica === currentCam) found.push("W. CHICA");
+        if (animatronics.foxy === currentCam) found.push("W. FOXY");
+
+        let status = document.getElementById('radar-status');
+        if (found.length > 0) {
+            status.innerText = found.join(" & ");
+            status.className = "detection-text";
+        } else {
+            status.innerText = "NOTHING";
+            status.className = "no-detection";
+        }
+    }
+
+    function kitchenLogic() {
+        if (!gameActive) return;
+
+        // El calor sube si no cocinas
+        pizzaHeat += 2;
+        if (pizzaHeat > 100) pizzaHeat = 100;
+
+        // Si el calor llega a 100, se incendia
+        if (pizzaHeat >= 100 && !isKitchenOnFire) {
+            isKitchenOnFire = true;
+            document.getElementById('fire-alert').style.display = 'block';
+            document.getElementById('btn-sprinkles-action').style.display = 'block';
+            // Aquí Chica se movería al pasillo central según tu regla
+            animatronics.chica = 4; 
+        }
+
+        document.getElementById('heat-val').innerText = pizzaHeat;
     }
 
     function cookPizza() {
-        pizzaTimer = 100;
-        console.log("Pizza cocinada");
+        if (isKitchenOnFire) return; // No puedes cocinar si hay fuego
+        pizzaHeat = Math.max(0, pizzaHeat - 25);
+        console.log("Cocinando...");
     }
 
     function useSprinklers() {
-        if (isFire) {
-            isFire = false;
-            document.getElementById('btn-sprinkles').style.display = 'none';
-            alert("Incendio apagado");
+        if (isKitchenOnFire) {
+            isKitchenOnFire = false;
+            pizzaHeat = 0;
+            document.getElementById('fire-alert').style.display = 'none';
+            document.getElementById('btn-sprinkles-action').style.display = 'none';
+            alert("SISTEMA DE ASPERSORES ACTIVADO: FUEGO APAGADO");
         }
+    }
+
+    function toggleCams() {
+        if (maskOn) return;
+        camsOpen = !camsOpen;
+        document.getElementById('camera-monitor').style.display = camsOpen ? 'block' : 'none';
+        if (camsOpen) updateRadar();
+    }
+
+    function toggleMask() {
+        if (camsOpen) return;
+        maskOn = !maskOn;
+        document.getElementById('mask-overlay').style.display = maskOn ? 'block' : 'none';
     }
 
     function toggleDoor(side) {
-        if (side === 'left') {
-            doorLeft = !doorLeft;
-            document.getElementById('door-left').style.background = doorLeft ? 'blue' : 'red';
+        let door = document.getElementById('door-' + side);
+        if (door.style.background === 'blue') {
+            door.style.background = '#440000';
+            door.innerText = "DOOR";
         } else {
-            doorRight = !doorRight;
-            document.getElementById('door-right').style.background = doorRight ? 'blue' : 'red';
+            door.style.background = 'blue';
+            door.innerText = "CLOSED";
         }
-    }
-
-    function checkGoldenFreddy() {
-        let limit = 50;
-        if (IA.golden >= 20) limit = 1;
-        else if (IA.golden >= 15) limit = 15;
-        else if (IA.golden >= 10) limit = 30;
-
-        if (gfCamCount >= limit && IA.golden > 0) {
-            alert("GOLDEN FREDDY APARECIÓ - ¡USA LA MÁSCARA!");
-            gfCamCount = 0;
-        }
-    }
-
-    // Loop de juego básico (Simulación)
-    function gameLoop() {
-        setInterval(() => {
-            // Lógica de Cocina
-            if (!camsOn || currentCam !== 3) {
-                pizzaTimer -= 0.5;
-            }
-            if (pizzaTimer <= 0 && !isFire) {
-                isFire = true;
-                document.getElementById('btn-sprinkles').style.display = 'block';
-                console.log("¡INCENDIO EN LA COCINA!");
-            }
-
-            // Aquí se añadiría la lógica de movimiento de Bonnie, Chica, etc.
-        }, 1000);
-    }
-
-    function openCustomNight() {
-        alert("Modo Custom Night: Freddy: " + IA.freddy + " Bonnie: " + IA.bonnie + "...");
-    }
-
-    function loadGame() {
-        const saved = localStorage.getItem('withered_attack_night');
-        if (saved) startGame(parseInt(saved));
-        else alert("No hay partida guardada");
     }
 </script>
 </body>
