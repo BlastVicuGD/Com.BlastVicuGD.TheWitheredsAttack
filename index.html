@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Withered's Attack - Kitchen Update</title>
+    <title>The Withered's Attack - HUD Update</title>
     <style>
         body { background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
         #game-container { width: 800px; height: 600px; background: #111; border: 4px solid #333; position: relative; overflow: hidden; }
         .screen { width: 100%; height: 100%; position: absolute; display: none; }
         .active { display: block; }
         
-        /* BOTONES DE PUERTAS */
+        /* ESTILO DE LA OFICINA Y BOTONES */
         .btn-door { position: absolute; width: 50px; height: 100px; background: #440000; top: 40%; border: 3px solid #ff0000; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         #door-left { left: 10px; }
         #door-right { right: 10px; }
         
-        /* BOTONES DE MÁSCARA Y CÁMARAS */
         #btn-mask { position: absolute; bottom: 10px; left: 10px; width: 140px; height: 60px; background: #222; border: 3px solid #555; z-index: 20; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         #btn-cams { position: absolute; bottom: 10px; right: 10px; width: 140px; height: 60px; background: #222; border: 3px solid #555; z-index: 20; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         
@@ -24,21 +23,32 @@
         /* MONITOR DE CÁMARAS */
         #camera-monitor { position: absolute; width: 100%; height: 100%; background: #000; z-index: 30; display: none; border: 10px solid #333; box-sizing: border-box;}
         
-        /* HUD DE DETECCIÓN */
-        #radar-hud { position: absolute; top: 20px; left: 20px; padding: 15px; border: 2px solid #00ff00; background: rgba(0, 40, 0, 0.7); color: #00ff00; font-size: 18px; z-index: 35; }
-        .detection-text { color: #00ff00; font-weight: bold; text-shadow: 0 0 5px #00ff00; }
-        .no-detection { color: #ff0000; font-style: italic; }
+        /* VISTA DE LA CAMARA */
+        #cam-view { width: 100%; height: 100%; position: relative; }
+        #cam-display-name { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); opacity: 0.8; font-size: 60px; color: #aaa; font-family: monospace; }
+        
+        /* TEXTO DE DETECCIÓN DEL ANIMATRÓNICO */
+        #animatronic-detection-text { 
+            position: absolute; 
+            bottom: 30%; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            color: #ff0000; 
+            font-size: 30px; 
+            font-family: monospace;
+            text-shadow: 0 0 10px #ff0000;
+        }
 
-        /* MECÁNICA DE COCINA */
-        #kitchen-interface { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); width: 300px; text-align: center; background: rgba(0,0,0,0.8); padding: 20px; border: 2px solid white; display: none; z-index: 40; }
-        .btn-cook { background: #ff9900; color: white; border: none; padding: 15px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 10px; }
-        .btn-sprinkles { background: #00ccff; color: white; border: none; padding: 15px; cursor: pointer; font-weight: bold; width: 100%; display: none; }
+        /* INTERFAZ COCINA */
+        #kitchen-interface { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); width: 300px; text-align: center; background: rgba(0,0,0,0.8); padding: 10px; border: 2px solid white; display: none; z-index: 40; }
+        .btn-cook, .btn-sprinkles { background: #ff9900; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; margin-top: 5px; }
+        .btn-sprinkles { background: #00ccff; display: none; }
         #fire-alert { color: red; font-weight: bold; display: none; animation: blink 0.5s infinite; }
 
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
 
-        /* MAPA */
-        #cam-map { position: absolute; bottom: 20px; left: 20px; width: 320px; height: 180px; border: 2px solid #fff; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 5px; background: rgba(0,0,0,0.9); }
+        /* MAPA INFERIOR */
+        #cam-map { position: absolute; bottom: 10px; left: 10px; width: 320px; height: 180px; border: 2px solid #fff; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 5px; background: rgba(0,0,0,0.9); }
         .cam-btn { background: #333; border: 1px solid #fff; color: #fff; font-size: 11px; cursor: pointer; }
         .cam-active { background: #fff !important; color: #000 !important; font-weight: bold; }
     </style>
@@ -46,7 +56,7 @@
 <body>
 
 <div id="game-container">
-    <!-- MENÚ -->
+    <!-- MENÚ PRINCIPAL -->
     <div id="menu-screen" class="screen active">
         <h1 style="text-align: center; margin-top: 100px;">THE WITHERED'S ATTACK</h1>
         <div style="margin-left: 100px; margin-top: 50px;">
@@ -62,7 +72,7 @@
         <div id="door-right" class="btn-door" onclick="toggleDoor('right')">DOOR</div>
         
         <div style="text-align:center; padding-top: 250px;">
-            <h2 id="office-location">CENTRAL HALL</h2>
+            <h2 id="office-location">OFFICE VIEW</h2>
         </div>
 
         <div id="btn-mask" onclick="toggleMask()">MASK</div>
@@ -71,8 +81,10 @@
 
     <!-- MONITOR -->
     <div id="camera-monitor">
-        <div id="radar-hud">
-            DETECTION: <span id="radar-status" class="no-detection">NOTHING</span>
+        <div id="cam-view">
+            <h1 id="cam-display-name">CAM 1</h1>
+            <!-- Este es el nuevo HUD de ubicación del animatrónico -->
+            <div id="animatronic-detection-text"></div>
         </div>
 
         <!-- INTERFAZ COCINA -->
@@ -84,10 +96,7 @@
             <button id="btn-sprinkles-action" class="btn-sprinkles" onclick="useSprinklers()">USE SPRINKLES</button>
         </div>
 
-        <div id="cam-view" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background: #0a0a0a;">
-            <h1 id="cam-display-name" style="opacity:0.1; font-size: 60px;">CAM 1</h1>
-        </div>
-
+        <!-- MAPA INFERIOR -->
         <div id="cam-map">
             <button class="cam-btn" id="m-cam1" onclick="switchCam(1, 'SHOW STAGE')">CAM 1</button>
             <button class="cam-btn" id="m-cam5" onclick="switchCam(5, 'PARTS & SERVICE')">CAM 5</button>
@@ -115,10 +124,10 @@
 
     // POSICIONES DE ANIMATRÓNICOS (Dummies para prueba)
     let animatronics = {
-        freddy: 1,
-        bonnie: 1,
-        chica: 3, // Chica empieza en la cocina
-        foxy: 2
+        freddy: 1, // Start at Show Stage
+        bonnie: 1, // Start at Show Stage
+        chica: 3,  // Start at Kitchen
+        foxy: 2    // Start at Pirate Cove
     };
 
     function startGame(night) {
@@ -126,8 +135,8 @@
         document.getElementById('office-screen').classList.add('active');
         gameActive = true;
         
-        // Loop de lógica de cocina
-        setInterval(kitchenLogic, 1000);
+        setInterval(kitchenLogic, 1500); // Check kitchen every 1.5s
+        setInterval(moveAnimatronics, 4000); // Move animatronics every 4s
     }
 
     function switchCam(id, name) {
@@ -141,49 +150,56 @@
         // Mostrar interfaz de cocina solo en CAM 3
         document.getElementById('kitchen-interface').style.display = (id === 3) ? 'block' : 'none';
 
-        updateRadar();
+        updateAnimatronicTextOverlay();
     }
 
-    function updateRadar() {
+    function updateAnimatronicTextOverlay() {
         let found = [];
-        if (animatronics.freddy === currentCam) found.push("W. FREDDY");
-        if (animatronics.bonnie === currentCam) found.push("W. BONNIE");
-        if (animatronics.chica === currentCam) found.push("W. CHICA");
-        if (animatronics.foxy === currentCam) found.push("W. FOXY");
+        if (animatronics.freddy === currentCam) found.push("W. FREDDY DETECTED");
+        if (animatronics.bonnie === currentCam) found.push("W. BONNIE DETECTED");
+        if (animatronics.chica === currentCam) found.push("W. CHICA DETECTED");
+        if (animatronics.foxy === currentCam) found.push("W. FOXY DETECTED");
 
-        let status = document.getElementById('radar-status');
+        // Actualiza el texto de superposición
+        const detectionTextElement = document.getElementById('animatronic-detection-text');
         if (found.length > 0) {
-            status.innerText = found.join(" & ");
-            status.className = "detection-text";
+            detectionTextElement.innerText = found.join(" | ");
         } else {
-            status.innerText = "NOTHING";
-            status.className = "no-detection";
+            detectionTextElement.innerText = ""; // Deja la pantalla vacía si no hay nadie, como pediste.
+        }
+    }
+    
+    function moveAnimatronics() {
+        // Lógica de movimiento simple para que puedas probar el HUD
+        animatronics.bonnie = Math.floor(Math.random() * 9) + 1;
+        animatronics.freddy = Math.floor(Math.random() * 9) + 1;
+        animatronics.chica = Math.floor(Math.random() * 9) + 1;
+        animatronics.foxy = Math.floor(Math.random() * 9) + 1;
+
+        if (camsOpen) {
+            updateAnimatronicTextOverlay();
         }
     }
 
     function kitchenLogic() {
         if (!gameActive) return;
 
-        // El calor sube si no cocinas
-        pizzaHeat += 2;
+        pizzaHeat += 3;
         if (pizzaHeat > 100) pizzaHeat = 100;
 
-        // Si el calor llega a 100, se incendia
         if (pizzaHeat >= 100 && !isKitchenOnFire) {
             isKitchenOnFire = true;
             document.getElementById('fire-alert').style.display = 'block';
             document.getElementById('btn-sprinkles-action').style.display = 'block';
-            // Aquí Chica se movería al pasillo central según tu regla
-            animatronics.chica = 4; 
+            animatronics.chica = 4; // Mueve Chica al Central Hall
         }
 
         document.getElementById('heat-val').innerText = pizzaHeat;
     }
 
     function cookPizza() {
-        if (isKitchenOnFire) return; // No puedes cocinar si hay fuego
-        pizzaHeat = Math.max(0, pizzaHeat - 25);
-        console.log("Cocinando...");
+        if (isKitchenOnFire) return; 
+        pizzaHeat = Math.max(0, pizzaHeat - 30);
     }
 
     function useSprinklers() {
@@ -192,7 +208,6 @@
             pizzaHeat = 0;
             document.getElementById('fire-alert').style.display = 'none';
             document.getElementById('btn-sprinkles-action').style.display = 'none';
-            alert("SISTEMA DE ASPERSORES ACTIVADO: FUEGO APAGADO");
         }
     }
 
@@ -200,7 +215,7 @@
         if (maskOn) return;
         camsOpen = !camsOpen;
         document.getElementById('camera-monitor').style.display = camsOpen ? 'block' : 'none';
-        if (camsOpen) updateRadar();
+        if (camsOpen) updateAnimatronicTextOverlay();
     }
 
     function toggleMask() {
