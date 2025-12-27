@@ -3,31 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Withered's Attack - HUD Update</title>
+    <title>The Withered's Attack - Puertas Funcionales</title>
     <style>
         body { background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        #game-container { width: 800px; height: 600px; background: #111; border: 4px solid #333; position: relative; overflow: hidden; }
+        #game-container { width: 800px; height: 600px; background: #000; border: 4px solid #333; position: relative; overflow: hidden; }
         .screen { width: 100%; height: 100%; position: absolute; display: none; }
         .active { display: block; }
         
-        /* ESTILO DE LA OFICINA Y BOTONES */
-        .btn-door { position: absolute; width: 50px; height: 100px; background: #440000; top: 40%; border: 3px solid #ff0000; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        #door-left { left: 10px; }
-        #door-right { right: 10px; }
+        /* ESTILO DE LA OFICINA Y BOTONES DE PUERTA */
+        .btn-door-container { position: absolute; width: 60px; height: 180px; top: 40%; transform: translateY(-50%); z-index: 10; display: flex; justify-content: center; align-items: center; }
+        #door-left-container { left: 10px; }
+        #door-right-container { right: 10px; }
+
+        .btn-door { width: 100%; height: 100%; background: #333; border: 2px solid #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .door-closed { background: #ff0000 !important; border-color: #ff5555 !important; }
+
+        /* BOTONES INFERIORES: MÁSCARA Y CÁMARAS */
+        #btn-mask, #btn-cams { position: absolute; bottom: 10px; width: 140px; height: 60px; background: #222; border: 2px solid #fff; z-index: 20; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        #btn-mask { left: 10px; }
+        #btn-cams { right: 10px; }
         
-        #btn-mask { position: absolute; bottom: 10px; left: 10px; width: 140px; height: 60px; background: #222; border: 3px solid #555; z-index: 20; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        #btn-cams { position: absolute; bottom: 10px; right: 10px; width: 140px; height: 60px; background: #222; border: 3px solid #555; z-index: 20; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        
-        #mask-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: none; z-index: 15; pointer-events: none; border: 60px solid #1a1a1a; box-sizing: border-box; }
+        #mask-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); display: none; z-index: 15; pointer-events: none; border: 60px solid #1a1a1a; box-sizing: border-box; }
 
         /* MONITOR DE CÁMARAS */
         #camera-monitor { position: absolute; width: 100%; height: 100%; background: #000; z-index: 30; display: none; border: 10px solid #333; box-sizing: border-box;}
         
-        /* VISTA DE LA CAMARA */
+        /* VISTA DE LA CAMARA Y DETECCION */
         #cam-view { width: 100%; height: 100%; position: relative; }
-        #cam-display-name { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); opacity: 0.8; font-size: 60px; color: #aaa; font-family: monospace; }
-        
-        /* TEXTO DE DETECCIÓN DEL ANIMATRÓNICO */
         #animatronic-detection-text { 
             position: absolute; 
             bottom: 30%; 
@@ -68,8 +70,14 @@
     <!-- OFICINA -->
     <div id="office-screen" class="screen">
         <div id="mask-overlay"></div>
-        <div id="door-left" class="btn-door" onclick="toggleDoor('left')">DOOR</div>
-        <div id="door-right" class="btn-door" onclick="toggleDoor('right')">DOOR</div>
+        
+        <!-- Contenedores de botones de puerta -->
+        <div id="door-left-container" class="btn-door-container" onclick="toggleDoor('left')">
+            <div id="btn-door-left" class="btn-door">CLOSE LEFT</div>
+        </div>
+        <div id="door-right-container" class="btn-door-container" onclick="toggleDoor('right')">
+            <div id="btn-door-right" class="btn-door">CLOSE RIGHT</div>
+        </div>
         
         <div style="text-align:center; padding-top: 250px;">
             <h2 id="office-location">OFFICE VIEW</h2>
@@ -82,14 +90,13 @@
     <!-- MONITOR -->
     <div id="camera-monitor">
         <div id="cam-view">
-            <h1 id="cam-display-name">CAM 1</h1>
-            <!-- Este es el nuevo HUD de ubicación del animatrónico -->
+            <h1 id="cam-display-name" style="position: absolute; top: 20px; left: 20px; opacity: 0.8;">CAM 1</h1>
             <div id="animatronic-detection-text"></div>
         </div>
 
         <!-- INTERFAZ COCINA -->
         <div id="kitchen-interface">
-            <h3 style="margin-top:0;">KITCHEN SYSTEM</h3>
+            <h3>KITCHEN SYSTEM</h3>
             <p>PIZZA HEAT: <span id="heat-val">0</span>%</p>
             <div id="fire-alert">!!! FIRE DETECTED !!!</div>
             <button class="btn-cook" onclick="cookPizza()">COOK PIZZA</button>
@@ -117,6 +124,8 @@
     let camsOpen = false;
     let maskOn = false;
     let currentCam = 1;
+    let doorLeftClosed = false;
+    let doorRightClosed = false;
     
     // SISTEMA DE COCINA
     let pizzaHeat = 0; 
@@ -124,10 +133,10 @@
 
     // POSICIONES DE ANIMATRÓNICOS (Dummies para prueba)
     let animatronics = {
-        freddy: 1, // Start at Show Stage
-        bonnie: 1, // Start at Show Stage
-        chica: 3,  // Start at Kitchen
-        foxy: 2    // Start at Pirate Cove
+        freddy: 1, 
+        bonnie: 1, 
+        chica: 3,  
+        foxy: 2    
     };
 
     function startGame(night) {
@@ -135,19 +144,17 @@
         document.getElementById('office-screen').classList.add('active');
         gameActive = true;
         
-        setInterval(kitchenLogic, 1500); // Check kitchen every 1.5s
-        setInterval(moveAnimatronics, 4000); // Move animatronics every 4s
+        setInterval(kitchenLogic, 1500); 
+        setInterval(moveAnimatronics, 4000); 
     }
 
     function switchCam(id, name) {
         currentCam = id;
         document.getElementById('cam-display-name').innerText = name;
         
-        // Actualizar botones del mapa
         document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('cam-active'));
         document.getElementById('m-cam' + id).classList.add('cam-active');
 
-        // Mostrar interfaz de cocina solo en CAM 3
         document.getElementById('kitchen-interface').style.display = (id === 3) ? 'block' : 'none';
 
         updateAnimatronicTextOverlay();
@@ -160,17 +167,16 @@
         if (animatronics.chica === currentCam) found.push("W. CHICA DETECTED");
         if (animatronics.foxy === currentCam) found.push("W. FOXY DETECTED");
 
-        // Actualiza el texto de superposición
         const detectionTextElement = document.getElementById('animatronic-detection-text');
         if (found.length > 0) {
             detectionTextElement.innerText = found.join(" | ");
         } else {
-            detectionTextElement.innerText = ""; // Deja la pantalla vacía si no hay nadie, como pediste.
+            detectionTextElement.innerText = "";
         }
     }
     
     function moveAnimatronics() {
-        // Lógica de movimiento simple para que puedas probar el HUD
+        // Movimiento aleatorio simple para prueba
         animatronics.bonnie = Math.floor(Math.random() * 9) + 1;
         animatronics.freddy = Math.floor(Math.random() * 9) + 1;
         animatronics.chica = Math.floor(Math.random() * 9) + 1;
@@ -183,7 +189,6 @@
 
     function kitchenLogic() {
         if (!gameActive) return;
-
         pizzaHeat += 3;
         if (pizzaHeat > 100) pizzaHeat = 100;
 
@@ -191,9 +196,8 @@
             isKitchenOnFire = true;
             document.getElementById('fire-alert').style.display = 'block';
             document.getElementById('btn-sprinkles-action').style.display = 'block';
-            animatronics.chica = 4; // Mueve Chica al Central Hall
+            animatronics.chica = 4; // Movemos a Chica al Central Hall
         }
-
         document.getElementById('heat-val').innerText = pizzaHeat;
     }
 
@@ -215,6 +219,11 @@
         if (maskOn) return;
         camsOpen = !camsOpen;
         document.getElementById('camera-monitor').style.display = camsOpen ? 'block' : 'none';
+        
+        // Desactivar botones de puerta si las cámaras están abiertas
+        document.getElementById('door-left-container').style.pointerEvents = camsOpen ? 'none' : 'auto';
+        document.getElementById('door-right-container').style.pointerEvents = camsOpen ? 'none' : 'auto';
+
         if (camsOpen) updateAnimatronicTextOverlay();
     }
 
@@ -225,13 +234,17 @@
     }
 
     function toggleDoor(side) {
-        let door = document.getElementById('door-' + side);
-        if (door.style.background === 'blue') {
-            door.style.background = '#440000';
-            door.innerText = "DOOR";
+        if (camsOpen) return; // No se pueden usar puertas con cámaras abiertas
+        
+        const btn = document.getElementById('btn-door-' + side);
+        const isClosed = btn.classList.toggle('door-closed');
+        
+        if (side === 'left') {
+            doorLeftClosed = isClosed;
+            btn.innerText = isClosed ? "CLOSED" : "CLOSE LEFT";
         } else {
-            door.style.background = 'blue';
-            door.innerText = "CLOSED";
+            doorRightClosed = isClosed;
+            btn.innerText = isClosed ? "CLOSED" : "CLOSE RIGHT";
         }
     }
 </script>
