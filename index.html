@@ -10,7 +10,9 @@
         .screen { width: 100%; height: 100%; position: absolute; display: none; }
         .active { display: block; }
         
-        /* ESTILO DE LA OFICINA Y BOTONES DE PUERTA */
+        /* HUD DE TIEMPO */
+        #time-display { position: absolute; top: 10px; right: 20px; font-size: 24px; z-index: 50; color: white; text-align: right; }
+
         .btn-door-container { position: absolute; width: 60px; height: 180px; top: 40%; transform: translateY(-50%); z-index: 10; display: flex; justify-content: center; align-items: center; }
         #door-left-container { left: 10px; }
         #door-right-container { right: 10px; }
@@ -18,237 +20,115 @@
         .btn-door { width: 100%; height: 100%; background: #333; border: 2px solid #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
         .door-closed { background: #ff0000 !important; border-color: #ff5555 !important; }
 
-        /* BOTONES INFERIORES: MÁSCARA Y CÁMARAS (Visibles en oficina) */
         #btn-mask, #btn-cams { position: absolute; bottom: 10px; width: 140px; height: 60px; background: #222; border: 2px solid #fff; z-index: 20; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         #btn-mask { left: 10px; }
         #btn-cams { right: 10px; }
         
         #mask-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); display: none; z-index: 15; pointer-events: none; border: 60px solid #1a1a1a; box-sizing: border-box; }
 
-        /* MONITOR DE CÁMARAS */
         #camera-monitor { position: absolute; width: 100%; height: 100%; background: #000; z-index: 30; display: none; border: 10px solid #333; box-sizing: border-box;}
         
-        /* VISTA DE LA CAMARA Y DETECCION */
         #cam-view { width: 100%; height: 100%; position: relative; }
-        #animatronic-detection-text { 
-            position: absolute; 
-            bottom: 30%; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            color: #ff0000; 
-            font-size: 30px; 
-            font-family: monospace;
-            text-shadow: 0 0 10px #ff0000;
-        }
+        #animatronic-detection-text { position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); color: #ff0000; font-size: 30px; font-family: monospace; text-shadow: 0 0 10px #ff0000; }
 
-        /* INTERFAZ COCINA */
         #kitchen-interface { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); width: 300px; text-align: center; background: rgba(0,0,0,0.8); padding: 10px; border: 2px solid white; display: none; z-index: 40; }
         .btn-cook, .btn-sprinkles { background: #ff9900; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; margin-top: 5px; }
-        .btn-sprinkles { background: #00ccff; display: none; }
-        #fire-alert { color: red; font-weight: bold; display: none; animation: blink 0.5s infinite; }
 
-        /* MAPA INFERIOR */
         #cam-map { position: absolute; bottom: 50px; left: 10px; width: 320px; height: 180px; border: 2px solid #fff; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 5px; background: rgba(0,0,0,0.9); }
         .cam-btn { background: #333; border: 1px solid #fff; color: #fff; font-size: 11px; cursor: pointer; }
         .cam-active { background: #fff !important; color: #000 !important; font-weight: bold; }
         
-        /* BOTON DE CERRAR CAMARAS (Nueva Posicion) */
-        #btn-close-cams {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            width: 334px; /* Ancho del mapa + padding/border */
-            height: 35px;
-            background: #444;
-            border: 2px solid #fff;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        #btn-close-cams { position: absolute; bottom: 10px; left: 10px; width: 334px; height: 35px; background: #444; border: 2px solid #fff; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
+    <!-- TIEMPO -->
+    <div id="time-display" class="screen">
+        <div id="clock">12 AM</div>
+        <div style="font-size: 14px;">Night 1</div>
+    </div>
+
     <!-- MENÚ PRINCIPAL -->
     <div id="menu-screen" class="screen active">
         <h1 style="text-align: center; margin-top: 100px;">THE WITHERED'S ATTACK</h1>
         <div style="margin-left: 100px; margin-top: 50px;">
             <div onclick="startGame(1)" style="cursor:pointer; font-size: 24px; margin: 15px;">« NEW GAME</div>
-            <div onclick="loadGame()" style="cursor:pointer; font-size: 24px; margin: 15px;">« CONTINUE</div>
         </div>
     </div>
 
     <!-- OFICINA -->
     <div id="office-screen" class="screen">
         <div id="mask-overlay"></div>
-        
-        <div id="door-left-container" class="btn-door-container" onclick="toggleDoor('left')">
-            <div id="btn-door-left" class="btn-door">CLOSE LEFT</div>
-        </div>
-        <div id="door-right-container" class="btn-door-container" onclick="toggleDoor('right')">
-            <div id="btn-door-right" class="btn-door">CLOSE RIGHT</div>
-        </div>
-        
-        <div style="text-align:center; padding-top: 250px;">
-            <h2 id="office-location">OFFICE VIEW</h2>
-        </div>
-
+        <div id="door-left-container" class="btn-door-container" onclick="toggleDoor('left')"><div id="btn-door-left" class="btn-door">CLOSE LEFT</div></div>
+        <div id="door-right-container" class="btn-door-container" onclick="toggleDoor('right')"><div id="btn-door-right" class="btn-door">CLOSE RIGHT</div></div>
+        <div style="text-align:center; padding-top: 250px;"><h2 id="office-location">OFFICE VIEW</h2></div>
         <div id="btn-mask" onclick="toggleMask()">MASK</div>
-        <div id="btn-cams" onclick="toggleCams()">CAMERAS</div>
+        <div id="btn-cams" onclick="toggleCams()">CAMS</div>
     </div>
 
     <!-- MONITOR -->
     <div id="camera-monitor">
         <div id="cam-view">
-            <h1 id="cam-display-name" style="position: absolute; top: 20px; left: 20px; opacity: 0.8;">CAM 1</h1>
+            <h1 id="cam-display-name" style="position: absolute; top: 20px; left: 20px;">CAM 1</h1>
             <div id="animatronic-detection-text"></div>
         </div>
-
-        <!-- INTERFAZ COCINA -->
-        <div id="kitchen-interface">
-            <h3>KITCHEN SYSTEM</h3>
-            <p>PIZZA HEAT: <span id="heat-val">0</span>%</p>
-            <div id="fire-alert">!!! FIRE DETECTED !!!</div>
-            <button class="btn-cook" onclick="cookPizza()">COOK PIZZA</button>
-            <button id="btn-sprinkles-action" class="btn-sprinkles" onclick="useSprinklers()">USE SPRINKLES</button>
-        </div>
-
-        <!-- MAPA INFERIOR -->
         <div id="cam-map">
-            <button class="cam-btn" id="m-cam1" onclick="switchCam(1, 'SHOW STAGE')">CAM 1</button>
-            <button class="cam-btn" id="m-cam5" onclick="switchCam(5, 'PARTS & SERVICE')">CAM 5</button>
-            <button class="cam-btn" id="m-cam2" onclick="switchCam(2, 'PIRATE COVE')">CAM 2</button>
-            <button class="cam-btn" id="m-cam8" onclick="switchCam(8, 'EAST HALL')">CAM 8</button>
-            <button class="cam-btn" id="m-cam4" onclick="switchCam(4, 'CENTRAL HALL')">CAM 4</button>
-            <button class="cam-btn" id="m-cam9" onclick="switchCam(9, 'WEST HALL')">CAM 9</button>
-            <button class="cam-btn" id="m-cam7" onclick="switchCam(7, 'BATHROOMS')">CAM 7</button>
-            <button class="cam-btn" id="m-cam6" onclick="switchCam(6, 'DOWN STAGE')">CAM 6</button>
+            <button class="cam-btn" id="m-cam1" onclick="switchCam(1, 'STAGE')">CAM 1</button>
+            <button class="cam-btn" id="m-cam2" onclick="switchCam(2, 'COVE')">CAM 2</button>
             <button class="cam-btn" id="m-cam3" onclick="switchCam(3, 'KITCHEN')">CAM 3</button>
         </div>
-        
-        <!-- BOTÓN CERRAR CÁMARAS (NUEVA UBICACIÓN) -->
-        <div id="btn-close-cams" onclick="toggleCams()">CLOSE CAMERAS</div>
+        <div id="btn-close-cams" onclick="toggleCams()">CLOSE</div>
     </div>
 </div>
 
 <script>
     let gameActive = false;
-    let camsOpen = false;
-    let maskOn = false;
-    let currentCam = 1;
-    let doorLeftClosed = false;
-    let doorRightClosed = false;
-    let pizzaHeat = 0; 
-    let isKitchenOnFire = false;
-
-    let animatronics = {
-        freddy: 1, bonnie: 1, chica: 3, foxy: 2
-    };
+    let hour = 0; // 0 es 12 AM
+    let gameTime = 0;
+    const hourDuration = 80000; // 80 segundos por hora para sumar 8 mins total (480s)
 
     function startGame(night) {
         document.getElementById('menu-screen').classList.remove('active');
         document.getElementById('office-screen').classList.add('active');
+        document.getElementById('time-display').classList.add('active');
         gameActive = true;
-        setInterval(kitchenLogic, 1500); 
-        setInterval(moveAnimatronics, 4000); 
-    }
-
-    function switchCam(id, name) {
-        currentCam = id;
-        document.getElementById('cam-display-name').innerText = name;
-        document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('cam-active'));
-        document.getElementById('m-cam' + id).classList.add('cam-active');
-        document.getElementById('kitchen-interface').style.display = (id === 3) ? 'block' : 'none';
-        updateAnimatronicTextOverlay();
-    }
-
-    function updateAnimatronicTextOverlay() {
-        let found = [];
-        if (animatronics.freddy === currentCam) found.push("W. FREDDY DETECTED");
-        if (animatronics.bonnie === currentCam) found.push("W. BONNIE DETECTED");
-        if (animatronics.chica === currentCam) found.push("W. CHICA DETECTED");
-        if (animatronics.foxy === currentCam) found.push("W. FOXY DETECTED");
-        const detectionTextElement = document.getElementById('animatronic-detection-text');
-        detectionTextElement.innerText = found.length > 0 ? found.join(" | ") : "";
-    }
-    
-    function moveAnimatronics() {
-        // Lógica de movimiento dummy
-        animatronics.bonnie = Math.floor(Math.random() * 9) + 1;
-        animatronics.freddy = Math.floor(Math.random() * 9) + 1;
-        animatronics.chica = Math.floor(Math.random() * 9) + 1;
-        animatronics.foxy = Math.floor(Math.random() * 9) + 1;
-        if (camsOpen) updateAnimatronicTextOverlay();
-    }
-
-    function kitchenLogic() {
-        if (!gameActive) return;
-        pizzaHeat += 3;
-        if (pizzaHeat > 100) pizzaHeat = 100;
-        if (pizzaHeat >= 100 && !isKitchenOnFire) {
-            isKitchenOnFire = true;
-            document.getElementById('fire-alert').style.display = 'block';
-            document.getElementById('btn-sprinkles-action').style.display = 'block';
-            animatronics.chica = 4; // Movemos a Chica al Central Hall
-        }
-        document.getElementById('heat-val').innerText = pizzaHeat;
-    }
-
-    function cookPizza() {
-        if (isKitchenOnFire) return; 
-        pizzaHeat = Math.max(0, pizzaHeat - 30);
-    }
-
-    function useSprinklers() {
-        if (isKitchenOnFire) {
-            isKitchenOnFire = false;
-            pizzaHeat = 0;
-            document.getElementById('fire-alert').style.display = 'none';
-            document.getElementById('btn-sprinkles-action').style.display = 'none';
-        }
-    }
-
-    function toggleCams() {
-        if (maskOn) return;
-        camsOpen = !camsOpen;
-        document.getElementById('camera-monitor').style.display = camsOpen ? 'block' : 'none';
         
-        // Controlar visibilidad de botones de oficina (Puertas, Máscara, Cámaras)
-        const officeButtons = [
-            document.getElementById('door-left-container'),
-            document.getElementById('door-right-container'),
-            document.getElementById('btn-mask'),
-            document.getElementById('btn-cams')
-        ];
-        
-        officeButtons.forEach(btn => {
-            btn.style.display = camsOpen ? 'none' : 'flex'; // Usamos flex para centrar
-        });
+        // Lógica del Reloj
+        let clockInterval = setInterval(() => {
+            if(!gameActive) { clearInterval(clockInterval); return; }
+            hour++;
+            if(hour > 6) hour = 6;
+            
+            document.getElementById('clock').innerText = (hour === 0 ? 12 : hour) + " AM";
+            
+            if(hour === 6) {
+                gameActive = false;
+                alert("6 AM - ¡Sobreviviste!");
+                location.reload();
+            }
+        }, hourDuration);
+    }
 
-        if (camsOpen) updateAnimatronicTextOverlay();
+    function toggleCams() { 
+        let mon = document.getElementById('camera-monitor');
+        mon.style.display = (mon.style.display === 'block') ? 'none' : 'block';
     }
 
     function toggleMask() {
-        if (camsOpen) return;
-        maskOn = !maskOn;
-        document.getElementById('mask-overlay').style.display = maskOn ? 'block' : 'none';
+        let mask = document.getElementById('mask-overlay');
+        mask.style.display = (mask.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function switchCam(id, name) {
+        document.getElementById('cam-display-name').innerText = name;
     }
 
     function toggleDoor(side) {
-        if (camsOpen) return;
-        const btn = document.getElementById('btn-door-' + side);
-        const isClosed = btn.classList.toggle('door-closed');
-        if (side === 'left') {
-            doorLeftClosed = isClosed;
-            btn.innerText = isClosed ? "CLOSED" : "CLOSE LEFT";
-        } else {
-            doorRightClosed = isClosed;
-            btn.innerText = isClosed ? "CLOSED" : "CLOSE RIGHT";
-        }
+        let btn = document.getElementById('btn-door-' + side);
+        btn.classList.toggle('door-closed');
+        btn.innerText = btn.classList.contains('door-closed') ? "OPEN " + side.toUpperCase() : "CLOSE " + side.toUpperCase();
     }
 </script>
 </body>
