@@ -35,7 +35,6 @@
         .cam-btn { background: #333; border: 1px solid #fff; color: #fff; font-size: 12px; cursor: pointer; font-family: monospace; height: 100%; }
         .cam-active { background: #fff !important; color: #000 !important; font-weight: bold; }
 
-        /* COCINA CON 3 BOTONES */
         #kitchen-interface { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); width: 300px; text-align: center; background: rgba(0,0,0,0.9); padding: 15px; border: 2px solid white; display: none; z-index: 40; }
         .btn-k { width: 100%; padding: 10px; margin-top: 5px; cursor: pointer; color: white; border: none; font-weight: bold; }
         .btn-cook { background: #ff9900; } 
@@ -163,7 +162,11 @@
             let safe = (currentEnemy === 'Freddy' && doorL) || (currentEnemy === 'Foxy' && doorR) || (currentEnemy !== 'Freddy' && currentEnemy !== 'Foxy');
             if(safe) maskRetreatTimer++; else maskRetreatTimer = 0;
             let limit = (currentEnemy === 'Bonnie' || currentEnemy === 'Golden') ? 3 : 4;
-            if(maskRetreatTimer >= limit) resetEnemy();
+            if(maskRetreatTimer >= limit) {
+                // BUG FIX: Reiniciar contador si es Golden Freddy
+                if(currentEnemy === 'Golden') monitorOpens = 0; 
+                resetEnemy();
+            }
         }
     }
 
@@ -177,20 +180,14 @@
 
     function updateKitchen() {
         document.getElementById('heat-val').innerText = heat;
-        // Lógica de botones corregida
         document.getElementById('btn-eat').style.display = (heat >= 80 && heat < 90) ? "block" : "none";
         document.getElementById('btn-sprinkles').style.display = (heat >= 90) ? "block" : "none";
-        
         if(currentEnemy === 'Chica' && heat === 0 && enemyTimer < 14) resetEnemy();
         if(heat >= 100) triggerDeath("Fire", "Kitchen burned down!");
     }
 
     function cook() { heat += 20; if(heat > 100) heat = 100; updateKitchen(); }
-    function resetHeat(t) { 
-        heat = 0; 
-        updateKitchen();
-        if(t === 'sprinkles') doorDelay += 1000;
-    }
+    function resetHeat(t) { heat = 0; updateKitchen(); if(t === 'sprinkles') doorDelay += 1000; }
 
     function toggleDoor(s) {
         setTimeout(() => {
@@ -203,18 +200,22 @@
         let m = document.getElementById('camera-monitor');
         let isOpen = m.style.display === "block";
         m.style.display = isOpen ? "none" : "block";
-        if(!isOpen) { monitorOpens++; if(monitorOpens >= 10 && !currentEnemy) spawnEnemy('Golden'); }
+        if(!isOpen) { 
+            monitorOpens++; 
+            // BUG FIX: Solo aparece si el contador llega exactamente a 10 y no hay nadie
+            if(monitorOpens >= 10 && !currentEnemy) {
+                spawnEnemy('Golden');
+            } 
+        }
     }
 
     function toggleMask() { maskOn = !maskOn; document.getElementById('mask-overlay').style.display = maskOn ? "block" : "none"; }
-    
     function switchCam(id, n) { 
         document.getElementById('cam-name').innerText = "CAM " + id + ": " + n; 
         document.getElementById('kitchen-interface').style.display = (id === 3) ? "block" : "none";
         document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('cam-active'));
         document.getElementById('btn-c' + id).classList.add('cam-active');
     }
-
     function triggerDeath(n, t) { gameActive = false; document.getElementById('jumpscare-screen').style.display = "block"; document.getElementById('death-anim').innerText = "By: " + n; document.getElementById('death-tip').innerText = t; }
     function winCinematic() { gameActive = false; document.getElementById('cinematic-screen').style.display = "flex"; setTimeout(() => { document.getElementById('big-clock').innerText = "6:00 AM"; document.getElementById('big-clock').classList.add('shake'); setTimeout(() => location.reload(), 5000); }, 2000); }
 </script>
