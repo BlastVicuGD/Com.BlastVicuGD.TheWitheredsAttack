@@ -3,161 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Withered's Attack - Final HUD</title>
+    <title>The Withered's Attack - Final HUD Edition</title>
     <style>
         body { background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
         #game-container { width: 800px; height: 600px; background: #000; border: 4px solid #333; position: relative; overflow: hidden; }
         .screen { width: 100%; height: 100%; position: absolute; display: none; }
         .active { display: block; }
         
-        /* ESTILO ORIGINAL DE LA OFICINA */
+        /* OFICINA Y PASILLO CENTRAL */
+        #hallway-detector { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-weight: bold; text-align: center; z-index: 5; }
+        .door-alert { color: #ff0000; font-size: 20px; position: absolute; top: 30%; width: 100px; text-align: center; font-weight: bold; }
+        #alert-left { left: 80px; }
+        #alert-right { right: 80px; }
+        .hall-warning { color: #ffff00; text-shadow: 0 0 10px #888800; }
+
         .btn-door-container { position: absolute; width: 60px; height: 180px; top: 40%; transform: translateY(-50%); z-index: 10; display: flex; justify-content: center; align-items: center; }
         #door-left-container { left: 10px; }
         #door-right-container { right: 10px; }
-
         .btn-door { width: 100%; height: 100%; background: #333; border: 2px solid #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
-        .door-closed { background: #ff0000 !important; border-color: #ff5555 !important; }
+        .door-closed { background: #ff0000 !important; }
 
+        /* BOTONES MÁSCARA Y CAMS */
         #btn-mask, #btn-cams { position: absolute; bottom: 10px; width: 140px; height: 60px; background: #222; border: 2px solid #fff; z-index: 20; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         #btn-mask { left: 10px; }
         #btn-cams { right: 10px; }
-        
-        #mask-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); display: none; z-index: 15; pointer-events: none; border: 60px solid #1a1a1a; box-sizing: border-box; }
+        #mask-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); display: none; z-index: 15; border: 60px solid #1a1a1a; box-sizing: border-box; pointer-events: none; }
 
-        #camera-monitor { position: absolute; width: 100%; height: 100%; background: #000; z-index: 30; display: none; border: 10px solid #333; box-sizing: border-box;}
-        
-        /* HUD DE TIEMPO (NUEVO) */
-        #time-hud { position: absolute; top: 10px; right: 20px; font-size: 24px; color: white; z-index: 50; text-align: right; }
-
-        /* CINEMÁTICA 6 AM (NUEVO) */
-        #cinematic-screen { background: #000; z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        #big-clock { font-size: 100px; font-weight: bold; color: #fff; transition: all 0.1s; }
-        .shake { animation: fnaf-shake 0.1s infinite; color: #fff; }
-        @keyframes fnaf-shake {
-            0% { transform: translate(3px, 3px); }
-            50% { transform: translate(-3px, -3px); }
-            100% { transform: translate(0, 0); }
-        }
-
-        /* MAPA Y OTROS ESTILOS IGUALES */
+        /* MONITOR Y 9 CÁMARAS */
+        #camera-monitor { position: absolute; width: 100%; height: 100%; background: #000; z-index: 30; display: none; border: 10px solid #333; box-sizing: border-box; }
         #cam-map { position: absolute; bottom: 50px; left: 10px; width: 320px; height: 180px; border: 2px solid #fff; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 5px; background: rgba(0,0,0,0.9); }
         .cam-btn { background: #333; border: 1px solid #fff; color: #fff; font-size: 11px; cursor: pointer; }
         .cam-active { background: #fff !important; color: #000 !important; font-weight: bold; }
-        #btn-close-cams { position: absolute; bottom: 10px; left: 10px; width: 334px; height: 35px; background: #444; border: 2px solid #fff; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; }
+
+        /* SISTEMA COCINA */
+        #kitchen-interface { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); width: 300px; text-align: center; background: rgba(0,0,0,0.8); padding: 10px; border: 2px solid white; display: none; z-index: 40; }
+        .btn-cook { background: #ff9900; color: white; border: none; padding: 10px; width: 100%; cursor: pointer; }
+        .btn-sprinkles { background: #00ccff; color: white; border: none; padding: 10px; width: 100%; cursor: pointer; margin-top: 5px; display: none; }
+
+        /* TIEMPO Y CINEMÁTICA */
+        #time-hud { position: absolute; top: 10px; right: 20px; font-size: 24px; z-index: 50; }
+        #cinematic-screen { background: #000; z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        #big-clock { font-size: 100px; font-weight: bold; }
+        .shake { animation: shake 0.1s infinite; }
+        @keyframes shake { 0%{transform:translate(2px,2px)} 50%{transform:translate(-2px,-2px)} }
+
+        /* JUMPSCARE TEXT */
+        #jumpscare-screen { background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <!-- HUD RELOJ -->
-    <div id="time-hud" style="display: none;">
-        <div id="current-hour">12 AM</div>
-        <div style="font-size: 14px;">Night 1</div>
+    <!-- PANTALLA JUMPSCARE -->
+    <div id="jumpscare-screen" class="screen">
+        <h1 style="color: red; font-size: 40px;">YOU DIED</h1>
+        <h2 id="death-animatronic" style="color: white;"></h2>
+        <p id="death-tip" style="color: #aaa; font-style: italic;"></p>
+        <button onclick="location.reload()" style="margin-top: 20px; padding: 10px; cursor:pointer;">RETRY</button>
     </div>
 
-    <!-- PANTALLA CINEMÁTICA -->
+    <!-- CINEMÁTICA 6 AM -->
     <div id="cinematic-screen" class="screen">
         <div id="big-clock">5:59 AM</div>
     </div>
 
-    <!-- MENÚ PRINCIPAL -->
+    <!-- HUD TIEMPO -->
+    <div id="time-hud" style="display:none;">
+        <div id="clock-text">12 AM</div>
+        <div style="font-size: 14px;">Night 1</div>
+    </div>
+
+    <!-- MENÚ -->
     <div id="menu-screen" class="screen active">
         <h1 style="text-align: center; margin-top: 100px;">THE WITHERED'S ATTACK</h1>
-        <div style="margin-left: 100px; margin-top: 50px;">
-            <div onclick="startGame()" style="cursor:pointer; font-size: 24px; margin: 15px;">« NEW GAME</div>
+        <div style="text-align:center; margin-top: 50px;">
+            <div onclick="startGame()" style="cursor:pointer; font-size: 24px;">« NEW GAME</div>
         </div>
     </div>
 
     <!-- OFICINA -->
     <div id="office-screen" class="screen">
         <div id="mask-overlay"></div>
+        
+        <div id="hallway-detector" class="hall-warning"></div>
+        <div id="alert-left" class="door-alert"></div>
+        <div id="alert-right" class="door-alert"></div>
+
         <div id="door-left-container" class="btn-door-container" onclick="toggleDoor('left')"><div id="btn-door-left" class="btn-door">CLOSE LEFT</div></div>
         <div id="door-right-container" class="btn-door-container" onclick="toggleDoor('right')"><div id="btn-door-right" class="btn-door">CLOSE RIGHT</div></div>
-        <div style="text-align:center; padding-top: 250px;"><h2>OFFICE VIEW</h2></div>
+        
+        <div style="text-align:center; padding-top: 250px; color: #333;"><h2>OFFICE VIEW</h2></div>
+        
         <div id="btn-mask" onclick="toggleMask()">MASK</div>
         <div id="btn-cams" onclick="toggleCams()">CAMERAS</div>
     </div>
 
     <!-- MONITOR -->
     <div id="camera-monitor">
-        <div style="width:100%; height:100%; position:relative;">
-            <h1 id="cam-display-name" style="position: absolute; top: 20px; left: 20px;">CAM 1</h1>
-            <div id="cam-map">
-                <button class="cam-btn" onclick="switchCam(1, 'STAGE')">CAM 1</button>
-                <button class="cam-btn" onclick="switchCam(2, 'COVE')">CAM 2</button>
-                <button class="cam-btn" onclick="switchCam(3, 'KITCHEN')">CAM 3</button>
-            </div>
-            <div id="btn-close-cams" onclick="toggleCams()">CLOSE CAMERAS</div>
+        <h1 id="cam-name" style="margin: 20px;">CAM 1: SHOW STAGE</h1>
+        
+        <div id="kitchen-interface">
+            <h3>KITCHEN SYSTEM</h3>
+            <p>HEAT: <span id="heat-val">0</span>%</p>
+            <button class="btn-cook" onclick="cook()">COOK PIZZA</button>
+            <button id="btn-sprinkles" class="btn-sprinkles" onclick="sprinkle()">USE SPRINKLES</button>
         </div>
+
+        <div id="cam-map">
+            <button class="cam-btn cam-active" onclick="switchCam(1, 'SHOW STAGE')">CAM 1</button>
+            <button class="cam-btn" onclick="switchCam(5, 'PARTS & SERVICE')">CAM 5</button>
+            <button class="cam-btn" onclick="switchCam(2, 'PIRATE COVE')">CAM 2</button>
+            <button class="cam-btn" onclick="switchCam(8, 'EAST HALL')">CAM 8</button>
+            <button class="cam-btn" onclick="switchCam(4, 'CENTRAL HALL')">CAM 4</button>
+            <button class="cam-btn" onclick="switchCam(9, 'WEST HALL')">CAM 9</button>
+            <button class="cam-btn" onclick="switchCam(7, 'BATHROOMS')">CAM 7</button>
+            <button class="cam-btn" onclick="switchCam(6, 'DOWN STAGE')">CAM 6</button>
+            <button class="cam-btn" onclick="switchCam(3, 'KITCHEN')">CAM 3</button>
+        </div>
+        <div onclick="toggleCams()" id="btn-close-cams">CLOSE CAMERAS</div>
     </div>
 </div>
 
 <script>
-    let hour = 0; 
     let gameActive = false;
-    const hourTime = 80000; // 80 segundos por hora = 8 minutos total noche (480 segundos)
+    let hour = 0;
+    let heat = 0;
+    let maskOn = false;
+    let doorL = false;
+    let doorR = false;
 
     function startGame() {
         document.getElementById('menu-screen').classList.remove('active');
         document.getElementById('office-screen').classList.add('active');
         document.getElementById('time-hud').style.display = "block";
         gameActive = true;
-        
-        let timer = setInterval(() => {
-            if(!gameActive) { clearInterval(timer); return; }
+
+        // Reloj: 80s x 6h = 480s (8 Minutos)
+        let clockInterval = setInterval(() => {
+            if(!gameActive) { clearInterval(clockInterval); return; }
             hour++;
-            if(hour < 6) {
-                document.getElementById('current-hour').innerText = hour + " AM";
-            } else if (hour === 6) {
-                clearInterval(timer);
-                runCinematic();
-            }
-        }, hourTime);
+            if(hour < 6) document.getElementById('clock-text').innerText = hour + " AM";
+            else { clearInterval(clockInterval); winCinematic(); }
+        }, 80000);
+
+        // Ciclo Cocina
+        setInterval(() => { if(gameActive && heat > 0) heat--; updateKitchen(); }, 2000);
+        
+        // Simulación IA de prueba
+        setInterval(aiLogic, 5000);
     }
 
-    function runCinematic() {
+    function aiLogic() {
+        if(!gameActive) return;
+        // Ejemplo de detección:
+        let rand = Math.random();
+        if(rand > 0.7) {
+            document.getElementById('hallway-detector').innerText = "WITHERED BONNIE IS IN THE HALLWAY";
+            setTimeout(() => document.getElementById('hallway-detector').innerText = "", 3000);
+        }
+        if(rand < 0.2) {
+            document.getElementById('alert-left').innerText = "WITHERED FOXY";
+            // Si no cierras puerta o usas máscara según personaje -> triggerDeath(...)
+        }
+    }
+
+    function triggerDeath(name, tip) {
         gameActive = false;
-        // Ocultar todo y mostrar cinemática
-        document.getElementById('office-screen').classList.remove('active');
-        document.getElementById('camera-monitor').style.display = "none";
-        document.getElementById('time-hud').style.display = "none";
-        
+        document.getElementById('jumpscare-screen').style.display = "flex";
+        document.getElementById('jumpscare-screen').classList.add('active');
+        document.getElementById('death-animatronic').innerText = "Killed by: " + name;
+        document.getElementById('death-tip').innerText = "Tip: " + tip;
+    }
+
+    function winCinematic() {
+        gameActive = false;
         const cine = document.getElementById('cinematic-screen');
-        const clock = document.getElementById('big-clock');
+        const bigClock = document.getElementById('big-clock');
         cine.style.display = "flex";
         cine.classList.add('active');
-
-        // Secuencia FNaF 2 (5:59 a 6:00)
         setTimeout(() => {
-            clock.classList.add('shake');
-            clock.innerText = "6:00 AM";
-            
-            // Sonido de victoria o mensaje (opcional)
-            setTimeout(() => {
-                alert("¡Noche Completada!");
-                location.reload();
-            }, 3000);
+            bigClock.innerText = "6:00 AM";
+            bigClock.classList.add('shake');
+            setTimeout(() => { alert("Night 1 Complete"); location.reload(); }, 4000);
         }, 2000);
     }
 
-    function toggleDoor(side) {
-        let btn = document.getElementById('btn-door-' + side);
-        btn.classList.toggle('door-closed');
-        btn.innerText = btn.classList.contains('door-closed') ? "OPEN " + side.toUpperCase() : "CLOSE " + side.toUpperCase();
+    function switchCam(id, name) {
+        document.getElementById('cam-name').innerText = "CAM " + id + ": " + name;
+        document.getElementById('kitchen-interface').style.display = (id === 3) ? "block" : "none";
+        document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('cam-active'));
+        event.target.classList.add('cam-active');
     }
 
-    function toggleCams() {
-        let cam = document.getElementById('camera-monitor');
-        cam.style.display = (cam.style.display === "block") ? "none" : "block";
+    function cook() { heat += 15; if(heat > 100) heat = 100; updateKitchen(); }
+    function updateKitchen() {
+        document.getElementById('heat-val').innerText = heat;
+        document.getElementById('btn-sprinkles').style.display = (heat >= 80) ? "block" : "none";
+        if(heat >= 100) triggerDeath("Kitchen Fire", "Don't let the pizza heat reach 100%!");
+    }
+    function sprinkle() { heat = 0; updateKitchen(); }
+
+    function toggleDoor(s) {
+        if(s === 'left') doorL = !doorL; else doorR = !doorR;
+        let b = document.getElementById('btn-door-'+s);
+        b.classList.toggle('door-closed');
+        b.innerText = b.classList.contains('door-closed') ? "OPEN "+s.toUpperCase() : "CLOSE "+s.toUpperCase();
+    }
+
+    function toggleCams() { 
+        let m = document.getElementById('camera-monitor');
+        m.style.display = (m.style.display === "block") ? "none" : "block";
     }
 
     function toggleMask() {
-        let mask = document.getElementById('mask-overlay');
-        mask.style.display = (mask.style.display === "block") ? "none" : "block";
-    }
-
-    function switchCam(id, name) {
-        document.getElementById('cam-display-name').innerText = "CAM " + id + ": " + name;
+        maskOn = !maskOn;
+        document.getElementById('mask-overlay').style.display = maskOn ? "block" : "none";
     }
 </script>
 </body>
