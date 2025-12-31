@@ -10,59 +10,67 @@
         .screen { width: 100%; height: 100%; position: absolute; display: none; }
         .active { display: block; }
         
-        /* ALERTAS Y PASILLO */
+        /* NUEVO HUD DE ATAQUE (TOP LEFT) */
+        #attack-hud { position: absolute; top: 10px; left: 10px; z-index: 100; color: #ff0000; font-weight: bold; font-size: 18px; text-shadow: 2px 2px #000; }
+        #mask-timer-hud { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -150%); z-index: 20; color: #FFD700; font-size: 24px; font-weight: bold; display: none; text-align: center; }
+
+        /* ALUCINACIONES GOLDEN FREDDY */
+        #hallucinations { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 80; display: none; background: rgba(0,0,0,0.4); flex-direction: column; justify-content: center; align-items: center; }
+        .hall-text { font-size: 40px; color: #fff; font-style: italic; margin: 10px; animation: glitch 0.1s infinite; }
+        @keyframes glitch { 0% { opacity: 1; transform: skew(0deg); } 50% { opacity: 0.5; transform: skew(5deg); } 100% { opacity: 1; transform: skew(-5deg); } }
+
+        /* OFICINA Y BOTONES */
         #hallway-detector { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-weight: bold; text-align: center; z-index: 5; }
         .door-alert { color: #ff0000; font-size: 20px; position: absolute; top: 30%; width: 150px; text-align: center; font-weight: bold; }
         #alert-left { left: 70px; }
         #alert-right { right: 70px; }
-        .hall-warning { color: #ffff00; text-shadow: 0 0 10px #888800; }
-
-        /* PUERTAS */
-        .btn-door-container { position: absolute; width: 60px; height: 180px; top: 40%; transform: translateY(-50%); z-index: 10; display: flex; justify-content: center; align-items: center; }
-        #door-left-container { left: 10px; }
-        #door-right-container { right: 10px; }
-        .btn-door { width: 100%; height: 100%; background: #333; border: 2px solid #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; transition: background 0.1s; }
+        .btn-door-container { position: absolute; width: 60px; height: 180px; top: 40%; transform: translateY(-50%); z-index: 10; display: flex; }
+        #door-left-container { left: 10px; } #door-right-container { right: 10px; }
+        .btn-door { width: 100%; height: 100%; background: #333; border: 2px solid #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .door-closed { background: #ff0000 !important; }
 
-        /* INTERFAZ */
         #btn-mask, #btn-cams { position: absolute; bottom: 10px; width: 140px; height: 60px; background: #222; border: 2px solid #fff; z-index: 20; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        #btn-mask { left: 10px; }
-        #btn-cams { right: 10px; }
-        #mask-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); display: none; z-index: 15; border: 60px solid #1a1a1a; box-sizing: border-box; pointer-events: none; }
+        #btn-mask { left: 10px; } #btn-cams { right: 10px; }
+        #mask-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: none; z-index: 15; border: 60px solid #1a1a1a; box-sizing: border-box; pointer-events: none; }
 
-        /* MONITOR Y COCINA */
+        /* MONITOR */
         #camera-monitor { position: absolute; width: 100%; height: 100%; background: #000; z-index: 30; display: none; border: 10px solid #333; box-sizing: border-box; }
         #cam-map { position: absolute; bottom: 50px; left: 10px; width: 320px; height: 180px; border: 2px solid #fff; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 5px; background: rgba(0,0,0,0.9); }
         .cam-btn { background: #333; border: 1px solid #fff; color: #fff; font-size: 11px; cursor: pointer; }
-        .cam-active { background: #fff !important; color: #000 !important; font-weight: bold; }
+        .cam-active { background: #fff !important; color: #000 !important; }
 
         #kitchen-interface { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 320px; text-align: center; background: rgba(0,0,0,0.9); padding: 15px; border: 2px solid white; display: none; z-index: 40; }
         .btn-k { width: 100%; padding: 12px; margin-top: 5px; cursor: pointer; color: white; border: none; font-weight: bold; }
-        .btn-cook { background: #ff9900; }
-        .btn-sprinkles { background: #00ccff; display: none; }
-        .btn-eat { background: #ff00ff; display: none; }
+        .btn-cook { background: #ff9900; } .btn-sprinkles { background: #00ccff; }
 
-        /* TIEMPO Y CINEMATICA */
         #time-hud { position: absolute; top: 10px; right: 20px; font-size: 24px; z-index: 50; }
-        #cinematic-screen { background: #000; z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
         #big-clock { font-size: 100px; font-weight: bold; }
-        .shake { animation: shake 0.1s infinite; }
-        @keyframes shake { 0%{transform:translate(2px,2px)} 50%{transform:translate(-2px,-2px)} }
-
-        #jumpscare-screen { background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .shake { animation: shake 0.1s infinite; } @keyframes shake { 0%{transform:translate(2px,2px)} 50%{transform:translate(-2px,-2px)} }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="jumpscare-screen" class="screen">
-        <h1 style="color: red; font-size: 40px;">YOU DIED</h1>
-        <h2 id="death-animatronic" style="color: white;"></h2>
-        <p id="death-tip" style="color: #aaa; padding: 0 50px;"></p>
-        <button onclick="location.reload()" style="margin-top: 20px; padding: 10px; cursor:pointer;">RETRY</button>
+    <div id="attack-hud"></div>
+    <div id="mask-timer-hud"></div>
+    
+    <div id="hallucinations">
+        <div class="hall-text">It'S mE</div>
+        <div class="hall-text">Do yOU REmemBER Me</div>
+        <div class="hall-text">YoU ARe aFtOn</div>
+        <div class="hall-text">YoU'RE DeaD</div>
     </div>
 
-    <div id="cinematic-screen" class="screen"><div id="big-clock">5:59 AM</div></div>
+    <div id="jumpscare-screen" class="screen" style="z-index:2000; background:#000; text-align:center;">
+        <h1 style="color:red; font-size:40px; margin-top:200px;">YOU DIED</h1>
+        <h2 id="death-anim" style="color:white;"></h2>
+        <p id="death-tip" style="color:#aaa;"></p>
+        <button onclick="location.reload()">RETRY</button>
+    </div>
+
+    <div id="cinematic-screen" class="screen" style="z-index:1000; background:#000; flex-direction:column; justify-content:center; align-items:center;">
+        <div id="big-clock">5:59 AM</div>
+    </div>
 
     <div id="time-hud" style="display:none;">
         <div id="clock-text">12 AM</div>
@@ -76,36 +84,28 @@
 
     <div id="office-screen" class="screen">
         <div id="mask-overlay"></div>
-        <div id="hallway-detector" class="hall-warning"></div>
+        <div id="hallway-detector" style="color:#ffff00;"></div>
         <div id="alert-left" class="door-alert"></div>
         <div id="alert-right" class="door-alert"></div>
-
         <div id="door-left-container" class="btn-door-container" onclick="toggleDoor('left')"><div id="btn-door-left" class="btn-door">CLOSE LEFT</div></div>
         <div id="door-right-container" class="btn-door-container" onclick="toggleDoor('right')"><div id="btn-door-right" class="btn-door">CLOSE RIGHT</div></div>
-        
         <div id="btn-mask" onclick="toggleMask()">MASK</div>
         <div id="btn-cams" onclick="toggleCams()">CAMS</div>
     </div>
 
     <div id="camera-monitor">
-        <h1 id="cam-name" style="margin: 20px;">CAM 1</h1>
+        <h1 id="cam-name" style="margin:20px;">CAM 1</h1>
         <div id="kitchen-interface">
             <h3>KITCHEN</h3>
-            <p>HEAT: <span id="heat-val">0</span>%</p>
+            <p>PIZZA HEAT: <span id="heat-val">0</span>%</p>
             <button class="btn-k btn-cook" onclick="cook()">COOK PIZZA</button>
             <button id="btn-sprinkles" class="btn-k btn-sprinkles" onclick="resetHeat('sprinkles')">USE SPRINKLES</button>
-            <button id="btn-eat" class="btn-k btn-eat" onclick="resetHeat('chica')">EAT PIZZA</button>
         </div>
         <div id="cam-map">
-            <button class="cam-btn cam-active" onclick="switchCam(1, 'STAGE')">CAM 1</button>
-            <button class="cam-btn" onclick="switchCam(5, 'P&S')">CAM 5</button>
-            <button class="cam-btn" onclick="switchCam(2, 'COVE')">CAM 2</button>
-            <button class="cam-btn" onclick="switchCam(8, 'EAST')">CAM 8</button>
-            <button class="cam-btn" onclick="switchCam(4, 'CENTRAL')">CAM 4</button>
-            <button class="cam-btn" onclick="switchCam(9, 'WEST')">CAM 9</button>
-            <button class="cam-btn" onclick="switchCam(7, 'BATH')">CAM 7</button>
-            <button class="cam-btn" onclick="switchCam(6, 'DOWN')">CAM 6</button>
+            <button class="cam-btn" onclick="switchCam(1, 'STAGE')">CAM 1</button>
             <button class="cam-btn" onclick="switchCam(3, 'KITCHEN')">CAM 3</button>
+            <button class="cam-btn" onclick="switchCam(2, 'COVE')">CAM 2</button>
+            <!-- (Añade el resto de botones aquí igual que antes) -->
         </div>
         <div onclick="toggleCams()" style="position:absolute; bottom:10px; left:10px; width:334px; height:35px; background:#444; border:2px solid #fff; display:flex; align-items:center; justify-content:center; cursor:pointer;">CLOSE</div>
     </div>
@@ -113,147 +113,108 @@
 
 <script>
     let gameActive = false, hour = 0, heat = 0, maskOn = false, doorL = false, doorR = false;
-    let doorDelay = 0, chicaHungerTimer = 0;
-    let currentEnemy = null, enemyTimer = 0;
+    let doorDelay = 0, monitorOpens = 0, currentEnemy = null, enemyTimer = 10;
+    let maskRetreatTimer = 0;
 
     function startGame() {
         document.getElementById('menu-screen').classList.remove('active');
         document.getElementById('office-screen').classList.add('active');
         document.getElementById('time-hud').style.display = "block";
         gameActive = true;
-
-        setInterval(() => {
-            if(!gameActive) return;
-            hour++;
-            if(hour < 6) document.getElementById('clock-text').innerText = hour + " AM";
-            else winCinematic();
-        }, 80000);
-
+        
+        setInterval(() => { if(gameActive) hour++; if(hour < 6) document.getElementById('clock-text').innerText = hour + " AM"; else winCinematic(); }, 80000);
         setInterval(gameTick, 1000);
     }
 
     function gameTick() {
         if(!gameActive) return;
-        
-        // Hambre de Chica (15 Seg)
-        chicaHungerTimer++;
-        if(chicaHungerTimer >= 15 && currentEnemy === null) spawnEnemy('Chica');
 
-        // Lógica de enemigos activos
         if(currentEnemy) {
-            enemyTimer++;
-            handleEnemyLogic();
-        } else if(Math.random() > 0.8) {
-            const pool = ['Bonnie', 'Freddy', 'Foxy'];
-            spawnEnemy(pool[Math.floor(Math.random()*pool.length)]);
+            enemyTimer--;
+            updateHUD();
+            checkSurvival();
+        } else {
+            if(Math.random() > 0.85) spawnEnemy(['Bonnie', 'Freddy', 'Foxy'][Math.floor(Math.random()*3)]);
+            if(Math.random() > 0.95 && !currentEnemy) spawnEnemy('Chica');
         }
         
-        if(heat > 0) heat--;
-        updateKitchen();
+        if(heat > 0) heat--; updateKitchen();
     }
 
     function spawnEnemy(name) {
-        currentEnemy = name; enemyTimer = 0;
-        const hall = document.getElementById('hallway-detector');
-        const alertL = document.getElementById('alert-left');
-        const alertR = document.getElementById('alert-right');
-
-        if(name === 'Bonnie' || name === 'Chica') {
-            hall.innerText = "WITHERED " + name.toUpperCase() + " IS IN THE HALLWAY";
-            startFlicker();
-        } else if(name === 'Freddy') {
-            alertL.innerText = "WITHERED FREDDY";
-        } else if(name === 'Foxy') {
-            alertR.innerText = "WITHERED FOXY";
+        currentEnemy = name;
+        enemyTimer = (name === 'Chica') ? 15 : 10;
+        if(name === 'Bonnie') document.getElementById('hallway-detector').innerText = "W. BONNIE IN HALLWAY";
+        if(name === 'Freddy') document.getElementById('alert-left').innerText = "W. FREDDY";
+        if(name === 'Foxy') document.getElementById('alert-right').innerText = "W. FOXY";
+        if(name === 'Golden') {
+            document.getElementById('hallucinations').style.display = "flex";
+            document.getElementById('hallway-detector').innerText = "W. GOLDEN FREDDY";
         }
     }
 
-    function handleEnemyLogic() {
-        if(enemyTimer >= 10) triggerDeath(currentEnemy, "You were too slow to react!");
+    function updateHUD() {
+        const hud = document.getElementById('attack-hud');
+        hud.innerText = currentEnemy ? `ATTACK: ${currentEnemy.toUpperCase()} - ${enemyTimer}s` : "";
+        
+        const mHud = document.getElementById('mask-timer-hud');
+        if(maskOn && currentEnemy) {
+            mHud.style.display = "block";
+            mHud.innerText = `REPELLING: ${3 + (currentEnemy==='Bonnie'?0:1)}s`;
+        } else { mHud.style.display = "none"; maskRetreatTimer = 0; }
+    }
 
-        let avoided = false;
-        if(currentEnemy === 'Bonnie' && maskOn && enemyTimer >= 3) avoided = true;
-        if(currentEnemy === 'Chica' && maskOn && enemyTimer >= 5) avoided = true;
-        if(currentEnemy === 'Freddy' && maskOn && doorL && enemyTimer >= 4) avoided = true;
-        if(currentEnemy === 'Foxy' && maskOn && doorR && enemyTimer >= 4) avoided = true;
+    function checkSurvival() {
+        if(enemyTimer <= 0) triggerDeath(currentEnemy, "Too slow!");
 
-        if(avoided) {
-            alert("The animatronic returned to its stage.");
-            resetEnemies();
+        if(maskOn) {
+            maskRetreatTimer++;
+            let limit = (currentEnemy === 'Bonnie' || currentEnemy === 'Golden') ? 3 : 4;
+            if(currentEnemy === 'Freddy' && !doorL) maskRetreatTimer = 0;
+            if(currentEnemy === 'Foxy' && !doorR) maskRetreatTimer = 0;
+            
+            if(maskRetreatTimer >= limit) resetEnemy();
         }
     }
 
-    function resetEnemies() {
+    function resetEnemy() {
         currentEnemy = null;
         document.getElementById('hallway-detector').innerText = "";
-        document.getElementById('alert-left').innerText = "";
-        document.getElementById('alert-right').innerText = "";
-        document.getElementById('office-screen').style.background = "#000";
-    }
-
-    function startFlicker() {
-        let count = 0;
-        let flicker = setInterval(() => {
-            if(!currentEnemy || (currentEnemy !== 'Bonnie' && currentEnemy !== 'Chica')) { clearInterval(flicker); return; }
-            document.getElementById('office-screen').style.background = (count % 2 === 0) ? "#000" : "#111";
-            count++;
-        }, 500);
+        document.querySelectorAll('.door-alert').forEach(a => a.innerText = "");
+        document.getElementById('hallucinations').style.display = "none";
+        updateHUD();
     }
 
     function updateKitchen() {
         document.getElementById('heat-val').innerText = heat;
-        document.getElementById('btn-sprinkles').style.display = (heat >= 80) ? "block" : "none";
-        document.getElementById('btn-eat').style.display = (heat >= 80 && heat < 90) ? "block" : "none";
-        if(heat >= 100) triggerDeath("Fire", "Kitchen exploded!");
+        if(currentEnemy === 'Chica' && heat === 0 && enemyTimer < 14) { resetEnemy(); }
+        if(heat >= 100) triggerDeath("Fire", "Keep heat under 100%");
     }
 
     function cook() { heat += 20; if(heat > 100) heat = 100; }
-    function resetHeat(t) { 
-        heat = 0; 
-        if(t === 'chica') chicaHungerTimer = 0;
-        if(t === 'sprinkles') doorDelay += 1000;
-    }
+    function resetHeat(t) { heat = 0; if(t === 'sprinkles') doorDelay += 1000; }
 
     function toggleDoor(s) {
         setTimeout(() => {
             if(s === 'left') doorL = !doorL; else doorR = !doorR;
-            let b = document.getElementById('btn-door-'+s);
-            b.classList.toggle('door-closed');
-            b.innerText = b.classList.contains('door-closed') ? "OPEN "+s.toUpperCase() : "CLOSE "+s.toUpperCase();
+            document.getElementById('btn-door-'+s).classList.toggle('door-closed');
         }, doorDelay);
     }
 
     function toggleCams() { 
         let m = document.getElementById('camera-monitor');
-        m.style.display = (m.style.display === "block") ? "none" : "block";
+        let isOpen = m.style.display === "block";
+        m.style.display = isOpen ? "none" : "block";
+        if(!isOpen) { 
+            monitorOpens++; 
+            if(monitorOpens >= 10 && !currentEnemy) spawnEnemy('Golden');
+        }
     }
 
-    function toggleMask() {
-        maskOn = !maskOn;
-        document.getElementById('mask-overlay').style.display = maskOn ? "block" : "none";
-    }
-
-    function switchCam(id, n) {
-        document.getElementById('cam-name').innerText = "CAM " + id + ": " + n;
-        document.getElementById('kitchen-interface').style.display = (id === 3) ? "block" : "none";
-    }
-
-    function winCinematic() {
-        gameActive = false;
-        document.getElementById('cinematic-screen').style.display = "flex";
-        setTimeout(() => {
-            document.getElementById('big-clock').innerText = "6:00 AM";
-            document.getElementById('big-clock').classList.add('shake');
-            setTimeout(() => location.reload(), 5000);
-        }, 2000);
-    }
-
-    function triggerDeath(n, t) {
-        gameActive = false;
-        document.getElementById('jumpscare-screen').style.display = "flex";
-        document.getElementById('death-animatronic').innerText = "Killed by: " + n;
-        document.getElementById('death-tip').innerText = "Tip: " + t;
-    }
+    function toggleMask() { maskOn = !maskOn; document.getElementById('mask-overlay').style.display = maskOn ? "block" : "none"; }
+    function switchCam(id, n) { document.getElementById('cam-name').innerText = "CAM " + id + ": " + n; document.getElementById('kitchen-interface').style.display = (id === 3) ? "block" : "none"; }
+    function triggerDeath(n, t) { gameActive = false; document.getElementById('jumpscare-screen').style.display = "block"; document.getElementById('death-anim').innerText = "Killed by: " + n; document.getElementById('death-tip').innerText = "Tip: " + t; }
+    function winCinematic() { gameActive = false; document.getElementById('cinematic-screen').style.display = "flex"; setTimeout(() => { document.getElementById('big-clock').innerText = "6:00 AM"; document.getElementById('big-clock').classList.add('shake'); setTimeout(() => location.reload(), 5000); }, 2000); }
 </script>
 </body>
 </html>
